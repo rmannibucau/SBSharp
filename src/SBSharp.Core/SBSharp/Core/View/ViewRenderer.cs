@@ -14,15 +14,7 @@ public class ViewRenderer
     {
         this.configuration = configuration;
 
-        string root;
-        if (Path.IsPathRooted(configuration.Input.View))
-        {
-            root = configuration.Input.View;
-        }
-        else
-        {
-            root = Path.Combine(configuration.Input.Location, configuration.Input.View);
-        }
+        var root = Path.Combine(Directory.GetCurrentDirectory(), configuration.Input.Location, configuration.Input.View);
         logger.LogInformation("Using view directory '{Directory}'", root);
 
         engine = new RazorLightEngineBuilder()
