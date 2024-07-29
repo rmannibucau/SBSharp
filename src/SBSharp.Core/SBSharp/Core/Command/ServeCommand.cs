@@ -49,7 +49,7 @@ public class ServeCommand(
                 app.Urls.Add(it);
             }
             app.Environment.WebRootFileProvider = new PhysicalFileProvider(
-                configuration.Output.Location
+                Path.Combine(Directory.GetCurrentDirectory(), configuration.Output.Location)
             );
             app.UseDefaultFiles();
             app.UseStaticFiles();
