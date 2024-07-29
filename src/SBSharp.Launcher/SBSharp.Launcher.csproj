@@ -1,9 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <PublishAot>true</PublishAot>
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>shsharp</ToolCommandName>
+    <ToolCommandName>sbsharp</ToolCommandName>
     <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
     <Description>Static site/blog generator based on Razor templating.</Description>
 
