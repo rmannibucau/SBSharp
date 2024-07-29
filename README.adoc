@@ -1,4 +1,4 @@
- = SBSharp
+= SBSharp
 
 _*S*tatic *B*log SHarp_ is a .NET (C#) static site generator.
 The blog mention is mainly because it is designed to be blogging friendly.
