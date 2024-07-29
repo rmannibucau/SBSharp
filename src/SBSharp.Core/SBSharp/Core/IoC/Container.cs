@@ -20,6 +20,7 @@ public class Container : IDisposable
 
         var configuration = new SBSharpConfiguration();
         new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("sbsharp.json", true)
             .AddEnvironmentVariables()
             .AddCommandLine(args.Length == 0 ? args : args[1..])
