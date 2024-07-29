@@ -1,0 +1,15 @@
+= Development Notes
+
+== Work on the documentation
+
+The documentation uses SBSharp itself to be rendered.
+
+To launch it in watch mode use the following command:
+
+[øource,sh]
+----
+DOC_CMD=serve dotnet run --project doc
+----
+
+It is based on `DocLauncher.cs` which is the entry point triggering some generation in `_partials` directory then the rendering of the website.
+

@@ -1,0 +1,26 @@
+<Project>
+
+    <PropertyGroup>
+        <VersionPrefix>0.0.1</VersionPrefix>
+        <Authors>rmannibucau</Authors>
+        <Company>rmannibucau</Company>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageTags>Static site, blog</PackageTags>
+
+        <IsTrimmable>true</IsTrimmable>
+        <IsAotCompatible>true</IsAotCompatible>
+
+        <Deterministic>true</Deterministic>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <WarningsAsErrors />
+    </PropertyGroup>
+
+    <Import
+        Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+</Project>
+  

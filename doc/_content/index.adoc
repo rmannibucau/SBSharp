@@ -1,0 +1,8 @@
+= SBSharp
+:view: landing
+
+*S*tatic *B*log Sharp (_#_) generator is a .NET based static site generator.
+
+It is intended to be simple to customize and enable to generate easily a *static* blog.
+
+Learn more on xref:how-it-works.adoc[how it works] page.

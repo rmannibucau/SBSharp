@@ -1,0 +1,95 @@
+= How it works
+
+[.fst-italic.abstract]
+Spirit behind _SBSharp_ is to start from the `.adoc` you can write, load it in an consolidated model then let your view drive the rendering of the website.
+
+== Configuration
+
+include::{partialsdir}/configuration.partial.adoc[leveloffset=+1]
+
+== Your first content
+
+The `.adoc` source in "input location" - see configuration - is loaded in a model then provided to the configured view.
+
+TIP: if no view is configured, then `default`one - `default.cshtml` in view directory - is used.
+
+[source,asciidoc]
+----
+= My Title <1>
+:view: my-view <2>
+
+My content in asciidoc. <3>
+----
+<.> The page title,
+<.> The view to use for the rendering,
+<.> The page content.
+
+This model is then converted in such a model - represented as JSON for simplicity:
+
+[source,json]
+----
+{
+    "Document": { <1>
+        "Header": {
+            "Title": "...",
+            "Author": {"Name":"...","Mail":"..."},
+            "Revision": {"Number":"...","Date":"...","RevMark":"..."},
+            "Attributes": {
+                "Key1": "Value1",
+                ...
+            }
+        },
+        "Body": {...}
+    },
+    "Body": () => "...content...", <2>
+    "Slug": "...", <3>
+    "GlobalAttributes": { <4>
+        "Key1": "Value1",
+        ...
+    },
+    "GlobalContext": { <5>
+        "Pages": [ {...} ]
+    }
+}
+----
+<.> The raw asciidoc model (not rendered),
+<.> The HTML body of the document (rendered as HTML),
+<.> The document slug (either from the asciidoc file file name without the extension or from the `:slug:` attribute),
+<.> Global attributes set for the rendering in the configuration  (can be used as default of the header attributes - specific attributes),
+<.> Access to the rendering context - which enables to render more than just the current page like closest other page for example - or a reference to it at least.
+
+The view attribute is optional and defaults to `default` if not set, it is then used to resolve the _RazorLight_ (think Razor) view in the view directory (see configuration).
+The view is compiled and rendered passing this model as parameter - accessible with `Model` implicit variable.
+
+For example, this `my-view.cshtml` file in view directory will render previous document:
+
+[source,html]
+----
+<html>
+<head>
+    <title>@Model.Document.Header.Title</title>
+</head>
+<body>
+    <div class="landing container pt-4">
+        @Raw(Model.Body())
+    </div>
+</body>
+</html>
+----
+
+TIP: `Raw` function enables to inject a pre-rendered HTML without any escaping - as `Html.Raw` in plain Razor, this is a link:https://github.com/toddams/RazorLight[RazorLight] feature.
+
+== Virtual pages
+
+Virtual pages are a way to generate pagination based pages.
+It is mainly useful for index kind of pages.
+
+It can be global (filtered by the presence of an attribute - ensure the page is a post for example) or per attribute value (author name).
+
+In this last case, the attribute value is considered comma-separated (for example `John, Doe` will handle two values, `John` and `Doe`).
+
+TIP: create a custom attribute if you need something more precise where there is no comma.
+
+See the configuration section for more details about how to enable that.
+
+IMPORTANT: it is super important to set a slug and a title to virtual pages since they will generally be used by your views to make the rendering - often the layout - specific.
