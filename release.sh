@@ -34,7 +34,7 @@ for p in \
   "SBSharp.Launcher"
 do
     echo "[INFO] Publishing $p"
-    $wrapping_command dotnet nuget push "./src/$p/bin/Release/$p.0.0.1.nupkg" --api-key "$NUGET_KEY" --symbol-api-key "$NUGET_KEY" --source https://api.nuget.org/v3/index.json
+    $wrapping_command dotnet nuget push "./src/$p/bin/Release/$p.$version.nupkg" --api-key "$NUGET_KEY" --symbol-api-key "$NUGET_KEY" --source https://api.nuget.org/v3/index.json
 done
 
 # move to next version
