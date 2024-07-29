@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Text;
 using System.Threading.Tasks.Dataflow;
 using Microsoft.Extensions.Logging;
@@ -142,10 +143,32 @@ public class BuildCommand
         ExecutionDataflowBlockOptions blockOptions
     )
     {
+        DateTime? notBefore = configuration.Output.NotBeforeToday ? DateTime.Now : null;
         var loadModelBlock = new ActionBlock<string>(
             async file =>
             {
                 var page = await LoadPage(file).ConfigureAwait(false);
+                if (notBefore is not null)
+                {
+                    var postDate = page.Document.Header.Attributes.TryGetValue(
+                        "published-on",
+                        out var date
+                    )
+                        ? date
+                        : null;
+                    if (
+                        postDate is not null
+                        && DateTime.ParseExact(postDate, "yyyyMMdd", CultureInfo.InvariantCulture)
+                            > notBefore
+                    )
+                    {
+                        logger.LogInformation(
+                            "Ignoring {file} since it is not yet published",
+                            file
+                        );
+                        return;
+                    }
+                }
                 lock (pages)
                 {
                     pages.Add((file, page!));

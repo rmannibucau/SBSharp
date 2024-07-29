@@ -42,6 +42,12 @@ public class SBSharpConfiguration
     public class OutputConfiguration
     {
         [Description(
+            "If `True`, posts where the date set in the attribute `published-on` is before _today_ will be ignored. Expected format: `yyyyMMdd`. "
+            + "If no date is found the post is considered published - but it is not expected."
+        )]
+        public bool NotBeforeToday { get; set; } = true;
+
+        [Description(
             "If `True`, part of asciidoc rendering is replaced by native bootstrap (5) HTML."
                 + "The most visible is to replace the standard table based adminiton by bootstrap alerts."
         )]
