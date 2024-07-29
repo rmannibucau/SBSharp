@@ -21,6 +21,9 @@ public class ViewRenderer
             .SetOperatingAssembly(typeof(ViewRenderer).Assembly)
             .UseFileSystemProject(root)
             .UseMemoryCachingProvider()
+            .UseOptions(new RazorLightOptions {
+                
+            })
             .Build();
     }
 
