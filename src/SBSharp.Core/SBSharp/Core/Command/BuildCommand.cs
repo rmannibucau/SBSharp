@@ -366,6 +366,9 @@ public class BuildCommand
             foreach (var chunk in chunks)
             {
                 var slug = spec.Slug.Replace("{Page}", page.ToString()).Replace("{Value}", value);
+                var pageAttributes = new Dictionary<string, string>(pagesAttributes);
+                pageAttributes.TryAdd("paginationCurrentPage", page.ToString());
+
                 var html = await views
                     .RenderAsync(
                         spec.View,
@@ -377,7 +380,7 @@ public class BuildCommand
                                         .Replace("{Value}", value),
                                     null,
                                     null,
-                                    pagesAttributes
+                                    pageAttributes
                                 ),
                                 new Body([])
                             ),
