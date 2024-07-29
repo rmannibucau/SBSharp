@@ -28,14 +28,14 @@ public record Page(
                 : null;
     }
 
-    public DateTime PublishedOn
+    public DateOnly PublishedOn
     {
         get
         {
             var date = Document.Header.Attributes.TryGetValue("published-on", out var p) ? p : "";
             return date.Length == 0
-                ? DateTime.MinValue
-                : DateTime.ParseExact(date, "yyyyMMdd", CultureInfo.InvariantCulture);
+                ? DateOnly.MinValue
+                : DateOnly.ParseExact(date, "yyyyMMdd", CultureInfo.InvariantCulture);
         }
     }
 

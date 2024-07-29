@@ -47,6 +47,6 @@ public class PageTests
             "",
             new Page.GlobalContext()
         ).PublishedOn;
-        Assert.Equal(new DateTime(new DateOnly(2024, 7, 1), TimeOnly.MinValue), date);
+        Assert.Equal(new DateOnly(2024, 7, 1), date);
     }
 }
