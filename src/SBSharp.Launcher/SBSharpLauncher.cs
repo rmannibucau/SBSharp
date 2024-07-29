@@ -4,9 +4,9 @@ namespace SBSharp.Launcher;
 
 public sealed class Launcher
 {
-    static async Task<int> Main(string[] args)
+    static int Main(string[] args)
     {
         using var container = new Container(args);
-        return await container.RunAsync();
+        return container.RunAsync().GetAwaiter().GetResult();
     }
 }

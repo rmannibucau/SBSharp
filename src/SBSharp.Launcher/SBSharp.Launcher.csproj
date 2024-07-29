@@ -2,6 +2,13 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <PublishAot>true</PublishAot>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>shsharp</ToolCommandName>
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+    <Description>Static site/blog generator based on Razor templating.</Description>
+
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
 
   <ItemGroup>
