@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using SBSharp.Core.Command;
 using SBSharp.Core.Configuration;
 using SBSharp.Core.Scanner;
@@ -19,19 +20,33 @@ public class Container : IDisposable
         this.args = args;
 
         var configuration = new SBSharpConfiguration();
-        new ConfigurationBuilder()
+        var globalConfiguration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("sbsharp.json", true)
             .AddEnvironmentVariables()
             .AddCommandLine(args.Length == 0 ? args : args[1..])
-            .Build()
-            .GetSection("sbsharp")
-            .Bind(configuration);
+            .Build();
+        globalConfiguration.GetSection("sbsharp").Bind(configuration);
 
         var beans = new ServiceCollection();
 
         // stack
-        beans.AddLogging(config => config.AddConsole());
+        beans.AddLogging(config =>
+        {
+            var loggingConfiguration = globalConfiguration.GetSection("Logging");
+            if (!loggingConfiguration.GetChildren().Any())
+            {
+                config.AddSimpleConsole(it =>
+                {
+                    it.SingleLine = true;
+                    it.TimestampFormat = "yyyy-MM-ddTHH:mm:ssZ ";
+                });
+            }
+            else
+            {
+                config.AddConfiguration(loggingConfiguration);
+            }
+        });
         beans.AddSingleton(configuration);
 
         // services
