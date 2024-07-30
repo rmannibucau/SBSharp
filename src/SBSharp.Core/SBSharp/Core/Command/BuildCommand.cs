@@ -48,7 +48,8 @@ public class BuildCommand
             Attributes = attributes,
             DataUriForAscii2Svg = true,
             SkipGlobalContentWrapper = true,
-            SupportDataAttributes = true
+            SupportDataAttributes = true,
+            AssetsBase = configuration.Input.Location
         };
     }
 
