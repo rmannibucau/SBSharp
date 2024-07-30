@@ -10,7 +10,8 @@ public class ServeCommand(
     SBSharpConfiguration configuration,
     FileWatcher watcher,
     BuildCommand delegateCommand,
-    ILogger<ServeCommand> logger
+    ILogger<ServeCommand> logger,
+    ILoggerFactory loggerFactory
 )
 {
     public async Task<int> InvokeAsync()
@@ -43,7 +44,12 @@ public class ServeCommand(
 
         try
         {
-            using var app = WebApplication.Create();
+            var builder = WebApplication.CreateBuilder();
+            // align web logging on the standalone application
+            builder.Logging.ClearProviders();
+            builder.Logging.AddProvider(new ProvidedLoggerFactoryLoggingProvider(loggerFactory));
+
+            using var app = builder.Build();
             foreach (var it in configuration.Serve.Urls)
             {
                 app.Urls.Add(it);
@@ -61,5 +67,18 @@ public class ServeCommand(
         }
 
         return await Task.FromResult(0);
+    }
+
+    internal class ProvidedLoggerFactoryLoggingProvider(ILoggerFactory factory) : ILoggerProvider
+    {
+        public ILogger CreateLogger(string categoryName)
+        {
+            return factory.CreateLogger(categoryName);
+        }
+
+        public void Dispose()
+        {
+            // no-op
+        }
     }
 }
