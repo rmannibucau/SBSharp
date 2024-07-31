@@ -38,12 +38,79 @@ public class SBSharpConfiguration
         public string[] Urls { get; set; } = ["http://localhost:4200"];
     }
 
+    [Description("RSS feed output configuration.")]
+    public class RssConfiguration
+    {
+        [Description(
+            "Should RSS feed be generated. Note that when enables the attributes `rss-skip` can be used to ignore a page and `rss-description`/`description` to set a RSS page description."
+        )]
+        public bool Enabled { get; set; } = true;
+
+        [Description(
+            "Where to output the RSS feed if enabled (absolute or relative to output location)."
+        )]
+        public string Location { get; set; } = "rss.xml";
+
+        [Description(
+            "RSS feed title, take care it is the XML value directly without any escaping."
+        )]
+        public string Title { get; set; } = "Blog";
+
+        [Description(
+            "RSS feed description, take care it is the XML value directly without any escaping."
+        )]
+        public string Description { get; set; } = "Blog";
+
+        [Description(
+            "RSS feed copyright, take care it is the XML value directly without any escaping."
+        )]
+        public string Copyright { get; set; } = "Built with SBSharp";
+
+        [Description("RSS feed link, take care it is the XML value directly without any escaping.")]
+        public string Link { get; set; } = "http://localhost:4200";
+
+        [Description("RSS feed ttl.")]
+        public int Ttl { get; set; } = 1800;
+    }
+
+    [Description("JSON indexation output configuration.")]
+    public class IndexationConfiguration
+    {
+        [Description(
+            "Should user pages be indexed in a JSON document. Using `index-skip` attribute you can disable a page indexation."
+        )]
+        public bool Enabled { get; set; } = true;
+
+        [Description(
+            "Where to output the index if enabled (absolute or relative to output location)."
+        )]
+        public string Location { get; set; } = "index.json";
+
+        [Description(
+            "List of indexed data, they are all read in page attributes except "
+                + "`index-title` which uses the document title - if the attribute value is not false which disables the virtual attribute and "
+                + "`index-body` which is the document in html and `index-publishedon` which is the publication date in ISO8601 format. "
+                + "Note that `index-description` can be replaced by `description` if it does not exist. "
+                + "Finally, on client side - in the JSON - the `index-` prefix is always stripped."
+        )]
+        public string[] IndexedAttributes { get; set; } =
+            ["index-title", "index-description", "index-body", "index-publishedon"];
+    }
+
     [Description("Site output rendering configuration.")]
     public class OutputConfiguration
     {
+        [Description("Should and how the RSS feed be generated.")]
+        public RssConfiguration Rss { get; set; } = new RssConfiguration();
+
+        [Description(
+            "Should user pages be indexed in a JSON document for a client side search (flexsearch friendly)."
+        )]
+        public IndexationConfiguration Index { get; set; } = new IndexationConfiguration();
+
         [Description(
             "If `True`, posts where the date set in the attribute `published-on` is before _today_ will be ignored. Expected format: `yyyyMMdd`. "
-            + "If no date is found the post is considered published - but it is not expected."
+                + "If no date is found the post is considered published - but it is not expected."
         )]
         public bool NotBeforeToday { get; set; } = true;
 

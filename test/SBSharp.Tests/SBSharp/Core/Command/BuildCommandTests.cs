@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using SBSharp.Core.IoC;
 using SBSharp.Tests.Temp;
 
@@ -44,6 +45,52 @@ public class BuildCommandTests
         await container.RunAsync();
 
         Assert.Equal(".test {}", File.ReadAllText(Path.Combine(output, "css/test.css")));
+        Assert.Equal(
+            """
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>Blog</title>
+    <description>Blog</description>
+    <link>http://localhost:4200</link>
+    <copyright>Built with SBSharp</copyright>
+    <ttl>1800</ttl>
+    <lastBuildDate>$date</lastBuildDate>
+    <pubDate>$date</pubDate>
+    <item>
+      <title>Index</title>
+      <description>Index
+Bla bla</description>
+      <link>rss.xml/index.adoc</link>
+      <guid isPermaLink="false">index.adoc</guid>
+      <pubDate>$date</pubDate>
+    </item>
+    <item>
+      <title>Post #1</title>
+      <description>Post #1
+A post with default template.</description>
+      <link>rss.xml/blog/post-1/simple-test.adoc</link>
+      <guid isPermaLink="false">blog/post-1/simple-test.adoc</guid>
+      <pubDate>$date</pubDate>
+    </item>
+</channel>
+</rss>
+
+""",
+            new Regex("ate>[^<]+</(.+)ate>").Replace(
+                File.ReadAllText(Path.Combine(output, "rss.xml")),
+                "ate>$date</$1ate>"
+            )
+        );
+        Assert.Equal(
+            "{\"items\":[{\"slug\":\"index\",\"title\":\"Index\",\"description\":\"Index\\nBla bla\","
+                + "\"attributes\":{\"title\":\"Index\",\"description\":\"Index\\nBla bla\","
+                + "\"body\":\" <div class=\\\"paragraph\\\">\\n <p>\\nBla bla\\n </p>\\n </div>\\n\",\"publishedon\":\"0001-01-01T00:00:00.000\"}},"
+                + "{\"slug\":\"simple-test\",\"title\":\"Post #1\",\"description\":\"Post #1\\nA post with default template.\","
+                + "\"attributes\":{\"title\":\"Post #1\",\"description\":\"Post #1\\nA post with default template.\","
+                + "\"body\":\" <div class=\\\"paragraph\\\">\\n <p>\\nA post with default template.\\n </p>\\n </div>\\n\",\"publishedon\":\"0001-01-01T00:00:00.000\"}}]}",
+            File.ReadAllText(Path.Combine(output, "index.json"))
+        );
 
         var files = Directory
             .EnumerateFiles(

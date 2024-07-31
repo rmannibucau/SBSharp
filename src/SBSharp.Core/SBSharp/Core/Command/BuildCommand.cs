@@ -1,6 +1,10 @@
 using System.Collections.Immutable;
 using System.Globalization;
+using System.Security;
 using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks.Dataflow;
 using Microsoft.Extensions.Logging;
 using NAsciidoc.Model;
@@ -8,6 +12,7 @@ using NAsciidoc.Parser;
 using NAsciidoc.Renderer;
 using SBSharp.Core.Asciidoc;
 using SBSharp.Core.Configuration;
+using SBSharp.Core.Json;
 using SBSharp.Core.Scanner;
 using SBSharp.Core.View;
 
@@ -59,7 +64,6 @@ public class BuildCommand
 
         var rendered = RenderAsync().ConfigureAwait(false);
         await CopyAssetsAsync().ConfigureAwait(false);
-
         var count = await rendered;
 
         logger.LogInformation(
@@ -72,9 +76,208 @@ public class BuildCommand
         return 0;
     }
 
+    private async Task<Task> RenderRss(List<(string, Page)> pages, CancellationToken token)
+    {
+        if (!configuration.Output.Rss.Enabled)
+        {
+            logger.LogInformation("RSS feed is disabled");
+            return await Task.FromResult(Task.CompletedTask);
+        }
+
+        return await Task.Run(async () =>
+        {
+            var xml = Path.Combine(
+                configuration.Output.Location,
+                configuration.Output.Rss.Location
+            );
+            Directory.GetParent(xml)!.Create();
+
+            logger.LogInformation("Generating RSS feed at '{Location}'", xml);
+
+            var dateFormat = "ddd, dd MMM yyyy HH:mm:ss zzz";
+            var now = DateTime.UtcNow.ToString(dateFormat);
+
+            using var writer = new FileInfo(xml).CreateText();
+            await writer.WriteAsync(
+                (
+                    "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+                    + "<rss version=\"2.0\">\n"
+                    + "  <channel>\n"
+                    + "    <title>"
+                    + configuration.Output.Rss.Title
+                    + "</title>\n"
+                    + "    <description>"
+                    + configuration.Output.Rss.Description
+                    + "</description>\n"
+                    + "    <link>"
+                    + configuration.Output.Rss.Link
+                    + "</link>\n"
+                    + "    <copyright>"
+                    + configuration.Output.Rss.Copyright
+                    + "</copyright>\n"
+                    + "    <ttl>"
+                    + configuration.Output.Rss.Ttl
+                    + "</ttl>\n"
+                    + "    <lastBuildDate>"
+                    + now
+                    + "</lastBuildDate>\n"
+                    + "    <pubDate>"
+                    + now
+                    + "</pubDate>\n"
+                ).AsMemory(),
+                token
+            );
+
+            string defaultDescription(Page page)
+            {
+                // do not use raw html there:
+                // var body = page.Body();
+                var body = RenderText(page.Document);
+                return body[..Math.Min(body.Length, 100)];
+            }
+
+            foreach (
+                var page in pages
+                    .OrderByDescending(it => it.Item2.PublishedOn)
+                    .ThenBy(it => it.Item2.Document.Header.Title)
+            )
+            {
+                var header = page.Item2.Document.Header;
+                if (header.Attributes.TryGetValue("rss-skip", out var v) && v != "false")
+                {
+                    continue;
+                }
+
+                var description = header.Attributes.TryGetValue("rss-description", out var d1)
+                    ? d1
+                    : (
+                        header.Attributes.TryGetValue("description", out var d2)
+                            ? d2
+                            : defaultDescription(page.Item2)
+                    );
+                var pageItem =
+                    "    <item>\n"
+                    + $"      <title>{SecurityElement.Escape(header.Title)}</title>\n"
+                    + $"      <description>{SecurityElement.Escape(description)}</description>\n"
+                    + $"      <link>{configuration.Output.Rss.Location}/{page.Item1}</link>\n"
+                    + $"      <guid isPermaLink=\"false\">{page.Item1}</guid>\n"
+                    + $"      <pubDate>{new DateTime(page.Item2.PublishedOn, TimeOnly.MinValue).ToString(dateFormat)}</pubDate>\n"
+                    + "    </item>\n";
+                await writer.WriteAsync(pageItem.AsMemory(), token);
+            }
+
+            await writer.WriteAsync("</channel>\n</rss>\n".AsMemory(), token);
+
+            return Task.CompletedTask;
+        });
+    }
+
+    // todo
+    private async Task<Task> RenderIndexJson(List<(string, Page)> pages, CancellationToken token)
+    {
+        if (!configuration.Output.Index.Enabled)
+        {
+            logger.LogInformation("(JSON) Indexation is disabled");
+            return await Task.FromResult(Task.CompletedTask);
+        }
+
+        return await Task.Run(async () =>
+        {
+            var json = Path.Combine(
+                configuration.Output.Location,
+                configuration.Output.Index.Location
+            );
+            Directory.GetParent(json)!.Create();
+
+            logger.LogInformation("Generating JSON index at '{Location}'", json);
+
+            string defaultDescription(Page page)
+            {
+                // do not use raw html there:
+                // var body = page.Body();
+                var body = RenderText(page.Document);
+                return body[..Math.Min(body.Length, 100)];
+            }
+
+            var docs = new List<IndexDocument>(pages.Count);
+            foreach (
+                var page in pages
+                    // order is not very important there but ease testing and manual review
+                    .OrderByDescending(it => it.Item2.PublishedOn)
+                    .ThenBy(it => it.Item2.Document.Header.Title)
+            )
+            {
+                var header = page.Item2.Document.Header;
+                if (header.Attributes.TryGetValue("index-skip", out var v) && v != "false")
+                {
+                    continue;
+                }
+
+                var description = header.Attributes.TryGetValue("index-description", out var d1)
+                    ? d1
+                    : (
+                        header.Attributes.TryGetValue("description", out var d2)
+                            ? d2
+                            : defaultDescription(page.Item2)
+                    );
+                var attributes = configuration
+                    .Output.Index.IndexedAttributes.Select(it =>
+                    {
+                        var value = it switch
+                        {
+                            // virtual attributes
+                            "index-title" => header.Title,
+                            "index-body" => page.Item2.Body(),
+                            "index-description" => description,
+                            "index-publishedon"
+                                => new DateTime(page.Item2.PublishedOn, TimeOnly.MinValue).ToString(
+                                    "yyyy-MM-ddTHH:mm:ss.fffK"
+                                ),
+                            // banalized attribute (custom)
+                            _
+                                => header.Attributes.TryGetValue(it, out var v1)
+                                    ? v1
+                                    : (header.Attributes.TryGetValue(it, out var v2) ? v2 : "")
+                        };
+                        return (
+                            Key: it.StartsWith("index-") ? it["index-".Length..] : it,
+                            Value: value
+                        );
+                    })
+                    .ToDictionary();
+
+                docs.Add(new IndexDocument(page.Item2.Slug, header.Title, description, attributes));
+            }
+
+            await File.WriteAllTextAsync(
+                json,
+                JsonSerializer.Serialize(
+                    new JsonIndex(docs),
+                    new SBSharpJsonContext(
+                        new JsonSerializerOptions
+                        {
+                            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                        }
+                    ).JsonIndex
+                ),
+                token
+            );
+
+            return Task.CompletedTask;
+        });
+    }
+
+    private string RenderText(Document doc)
+    {
+        var renderer = new TextRenderer();
+        renderer.Visit(doc);
+        return renderer.Result();
+    }
+
     private string RenderAdoc(Document document)
     {
-        // todo: make it bootstrap friendly?
         var renderer = configuration.Output.UseBootstrap
             ? new BootstrapRender(renderingConfiguration)
             : new AsciidoctorLikeHtmlRenderer(renderingConfiguration);
@@ -129,9 +332,16 @@ public class BuildCommand
 
         blockOptions.CancellationToken.ThrowIfCancellationRequested();
 
-        var renderBlock = await RenderPages(pages, blockOptions).ConfigureAwait(false);
-        var renderVirtualBlock = await RenderVirtualPages(pages, blockOptions)
+        var tasks = await Task.WhenAll(
+                RenderRss(pages, blockOptions.CancellationToken),
+                RenderIndexJson(pages, blockOptions.CancellationToken),
+                RenderPages(pages, blockOptions),
+                RenderVirtualPages(pages, blockOptions)
+            )
             .ConfigureAwait(false);
+
+        var renderBlock = tasks[1];
+        var renderVirtualBlock = tasks[2];
 
         await Task.WhenAll(renderBlock, renderVirtualBlock).ConfigureAwait(false);
         blockOptions.CancellationToken.ThrowIfCancellationRequested();
