@@ -233,6 +233,7 @@ public class BuildCommand
                             "index-title" => header.Title,
                             "index-body" => page.Item2.Body(),
                             "index-description" => description,
+                            "index-gravatar" => page.Item2.Gravatar,
                             "index-publishedon"
                                 => new DateTime(page.Item2.PublishedOn, TimeOnly.MinValue).ToString(
                                     "yyyy-MM-ddTHH:mm:ss.fffK"

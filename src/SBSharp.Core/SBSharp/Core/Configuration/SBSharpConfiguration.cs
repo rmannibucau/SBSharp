@@ -90,6 +90,7 @@ public class SBSharpConfiguration
             "List of indexed data, they are all read in page attributes except "
                 + "`index-title` which uses the document title - if the attribute value is not false which disables the virtual attribute and "
                 + "`index-body` which is the document in html and `index-publishedon` which is the publication date in ISO8601 format. "
+                + "For convenience, `index-gravatar` computes the author gravatar URL. "
                 + "Note that `index-description` can be replaced by `description` if it does not exist. "
                 + "Finally, on client side - in the JSON - the `index-` prefix is always stripped."
         )]
