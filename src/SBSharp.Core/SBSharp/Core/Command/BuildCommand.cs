@@ -353,10 +353,8 @@ public class BuildCommand
             )
             .ConfigureAwait(false);
 
-        var renderBlock = tasks[1];
-        var renderVirtualBlock = tasks[2];
-
-        await Task.WhenAll(renderBlock, renderVirtualBlock).ConfigureAwait(false);
+        // double await since we use actionblock for a few tasks
+        await Task.WhenAll(tasks).ConfigureAwait(false);
         blockOptions.CancellationToken.ThrowIfCancellationRequested();
 
         return pages.Count;
@@ -436,7 +434,7 @@ public class BuildCommand
     {
         if (configuration.Input.VirtualPages.Length == 0)
         {
-            return Task.CompletedTask;
+            return await Task.FromResult(Task.CompletedTask);
         }
 
         var allPages = pages.Select(it => it.Item2).ToList();
@@ -520,6 +518,7 @@ public class BuildCommand
                                     .Select(key => (Key: key, Page: it))
                             )
                             .GroupBy(it => it.Key, it => it.Page);
+                        await Task.CompletedTask.ConfigureAwait(false); // if no perValue item
                         foreach (var value in perValue)
                         {
                             logger.LogInformation(
