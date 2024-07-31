@@ -61,7 +61,7 @@ public class BuildCommandTests
       <title>Index</title>
       <description>Index
 Bla bla</description>
-      <link>rss.xml/index.adoc</link>
+      <link>http://localhost:4200/index.adoc</link>
       <guid isPermaLink="false">index.adoc</guid>
       <pubDate>$date</pubDate>
     </item>
@@ -69,7 +69,7 @@ Bla bla</description>
       <title>Post #1</title>
       <description>Post #1
 A post with default template.</description>
-      <link>rss.xml/blog/post-1/simple-test.adoc</link>
+      <link>http://localhost:4200/blog/post-1/simple-test.adoc</link>
       <guid isPermaLink="false">blog/post-1/simple-test.adoc</guid>
       <pubDate>$date</pubDate>
     </item>

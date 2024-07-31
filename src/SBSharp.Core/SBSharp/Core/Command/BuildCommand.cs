@@ -153,13 +153,17 @@ public class BuildCommand
                     : (
                         header.Attributes.TryGetValue("description", out var d2)
                             ? d2
-                            : defaultDescription(page.Item2)
+                            : (
+                                header.Attributes.TryGetValue("summary", out var d3)
+                                    ? d3
+                                    : defaultDescription(page.Item2)
+                            )
                     );
                 var pageItem =
                     "    <item>\n"
                     + $"      <title>{SecurityElement.Escape(header.Title)}</title>\n"
                     + $"      <description>{SecurityElement.Escape(description)}</description>\n"
-                    + $"      <link>{configuration.Output.Rss.Location}/{page.Item1}</link>\n"
+                    + $"      <link>{configuration.Output.Rss.Link}/{page.Item1}</link>\n"
                     + $"      <guid isPermaLink=\"false\">{page.Item1}</guid>\n"
                     + $"      <pubDate>{new DateTime(page.Item2.PublishedOn, TimeOnly.MinValue).ToString(dateFormat)}</pubDate>\n"
                     + "    </item>\n";
