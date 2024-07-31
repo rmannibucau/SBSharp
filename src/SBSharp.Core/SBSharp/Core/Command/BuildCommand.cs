@@ -301,6 +301,11 @@ public class BuildCommand
             var target = Path.Combine(configuration.Output.Location, it);
             Directory.GetParent(target)!.Create();
 
+            if (File.Exists(target))
+            {
+                File.Delete(target);
+            }
+
             using var from = new FileStream(source, FileMode.Open);
             using var to = new FileStream(
                 target,
