@@ -92,10 +92,11 @@ public class SBSharpConfiguration
                 + "`index-body` which is the document in html and `index-publishedon` which is the publication date in ISO8601 format. "
                 + "For convenience, `index-gravatar` computes the author gravatar URL. "
                 + "Note that `index-description` can be replaced by `description` if it does not exist. "
-                + "Finally, on client side - in the JSON - the `index-` prefix is always stripped."
+                + "Finally, on client side - in the JSON - the `index-` prefix is always stripped. "
+                + "A common default value would be `index-title,index-description,index-body,index-publishedon` for example to enable to render a search result with some minimal information and search based on the body (totally optional, you can even think to a custom `keyword` attribute). "
+                + "This is what is used when the value is not set."
         )]
-        public string[] IndexedAttributes { get; set; } =
-            ["index-title", "index-description", "index-body", "index-publishedon"];
+        public string[]? IndexedAttributes { get; set; } = null;
     }
 
     [Description("Site output rendering configuration.")]

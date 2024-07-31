@@ -106,12 +106,12 @@ A post with default template.</description>
                     return agg;
                 }
             );
-        Assert.Equivalent(
-            new Dictionary<string, string>
+
+        var expectedFiles = new Dictionary<string, string>
+        {
             {
-                {
-                    "index.html",
-                    """
+                "index.html",
+                """
 <html>
  <head>
    <title>Index</title>
@@ -133,10 +133,10 @@ Bla bla
  </body>
 </html>
 """
-                },
-                {
-                    "blog/post-1/simple-test.html",
-                    """
+            },
+            {
+                "blog/post-1/simple-test.html",
+                """
 <html>
  <head>
    <title>Post #1</title>
@@ -159,10 +159,10 @@ A post with default template.
  </body>
 </html>
 """
-                },
-                {
-                    "blog/1.html",
-                    """
+            },
+            {
+                "blog/1.html",
+                """
 <html>
  <head>
    <title>Posts page 1</title>
@@ -183,10 +183,10 @@ A post with default template.
  </body>
 </html>
 """
-                },
-                {
-                    "blog/author/rmannibucau/1.html",
-                    """
+            },
+            {
+                "blog/author/rmannibucau/1.html",
+                """
 <html>
  <head>
    <title>Posts of rmannibucau, page 1</title>
@@ -207,10 +207,16 @@ A post with default template.
  </body>
 </html>
 """
-                }
-            },
-            files
-        );
+            }
+        };
+
+        // normally this line is sufficient but assert error messages are awful
+        // Assert.Equivalent(expectedFiles, files);
+        Assert.Equivalent(expectedFiles.Keys, files.Keys);
+        foreach (var key in files.Keys)
+        {
+            Assert.Equal(expectedFiles[key], files[key]);
+        }
     }
 
     private void CreateBlog(string root)

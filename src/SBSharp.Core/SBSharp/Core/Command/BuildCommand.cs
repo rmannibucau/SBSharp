@@ -224,8 +224,11 @@ public class BuildCommand
                             ? d2
                             : defaultDescription(page.Item2)
                     );
-                var attributes = configuration
-                    .Output.Index.IndexedAttributes.Select(it =>
+                var indexAttributes =
+                    configuration.Output.Index.IndexedAttributes
+                    ?? ["index-title", "index-description", "index-body", "index-publishedon"];
+                var attributes = indexAttributes
+                    .Select(it =>
                     {
                         var value = it switch
                         {
