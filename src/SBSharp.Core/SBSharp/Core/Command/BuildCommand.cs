@@ -115,7 +115,20 @@ public class BuildCommand
 
             counter++;
 
-            using var proc = Process.Start(info);
+            var proc = new Process { StartInfo = info, EnableRaisingEvents = true };
+            proc.OutputDataReceived += (_, e) => Console.WriteLine(e.Data);
+            proc.ErrorDataReceived += (_, e) => Console.Error.WriteLine(e.Data);
+
+            if (!proc.Start())
+            {
+                throw new InvalidOperationException(
+                    $"Can't start process. '{info.FileName}' (#{counter})"
+                );
+            }
+
+            using var autoClean = proc;
+            proc.BeginOutputReadLine();
+            proc.BeginErrorReadLine();
             await proc!.WaitForExitAsync();
             if (proc.ExitCode != 0)
             {
