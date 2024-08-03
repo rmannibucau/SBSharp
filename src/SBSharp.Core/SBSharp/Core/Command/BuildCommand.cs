@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Globalization;
 using System.Security;
 using System.Text;
@@ -73,7 +74,56 @@ public class BuildCommand
             outputBase
         );
 
+        if (configuration.PostProcessing.Length > 0)
+        {
+            await PostProcessAsync();
+        }
+
         return 0;
+    }
+
+    private async Task PostProcessAsync()
+    {
+        int counter = 1;
+        foreach (var p in configuration.PostProcessing)
+        {
+            if (!string.IsNullOrWhiteSpace(p.LogMessage))
+            {
+                logger.LogInformation("{Message}", p.LogMessage);
+            }
+
+            var dir = string.IsNullOrWhiteSpace(p.WorkDir)
+                ? configuration.Input.Location
+                : Path.Combine(configuration.Input.Location, p.WorkDir);
+
+            var info = new ProcessStartInfo
+            {
+                FileName = p.Command[0],
+                Arguments = p.Command.Length == 1 ? "" : string.Join(' ', p.Command[1..]),
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                WorkingDirectory = dir,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
+            };
+            foreach (var env in p.Environment)
+            {
+                var sep = env.IndexOf('=');
+                info.EnvironmentVariables[env[0..sep]] = env[(sep + 1)..];
+            }
+
+            counter++;
+
+            using var proc = Process.Start(info);
+            await proc!.WaitForExitAsync();
+            if (proc.ExitCode != 0)
+            {
+                throw new InvalidOperationException(
+                    $"Invalid exit statut for post-processing '{info.FileName}' (#{counter}): {proc.ExitCode}"
+                );
+            }
+        }
     }
 
     private async Task<Task> RenderRss(List<(string, Page)> pages, CancellationToken token)

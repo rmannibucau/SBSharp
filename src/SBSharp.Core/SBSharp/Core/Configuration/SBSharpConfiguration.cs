@@ -11,11 +11,39 @@ public class SBSharpConfiguration
     [Description("Output configuration.")]
     public OutputConfiguration Output { get; set; } = new OutputConfiguration();
 
+    [Description(
+        "Post-processing configuration, often enables to work on the generated content to optimize it. "
+            + "Common examples are regenerating the index to make it precomputed for the runtime - depends the js query libraring, or pre-render the code snippets with highlighting - depends the library too."
+    )]
+    public PostProcessingConfiguration[] PostProcessing { get; set; } = [];
+
     [Description("Watch specific configuration - `serve`and `watch` commands only.")]
     public WatchConfiguration Watch { get; set; } = new WatchConfiguration();
 
     [Description("Serve specific configuration - `serve` command only.")]
     public ServeConfiguration Serve { get; set; } = new ServeConfiguration();
+
+    [Description("Tasks ran after the generation.")]
+    public class PostProcessingConfiguration
+    {
+        [Description("The command to execute.")]
+        public string[] Command { get; set; } = [];
+
+        [Description(
+            "The environment to execute the command to, every entry is formatted as `ENV_VAR_NAME=env var value`."
+        )]
+        public string[] Environment { get; set; } = [];
+
+        [Description(
+            "The directory to execute the command from, empty means the `Input.Location` value, if not absolute it is relative to the `Input.Location` value."
+        )]
+        public string WorkDir { get; set; } = "";
+
+        [Description(
+            "An optional log message to print when executing the command, empty values will ignore this feature."
+        )]
+        public string LogMessage { get; set; } = "";
+    }
 
     [Description("Watch and serve command file system watching specific configuration.")]
     public class WatchConfiguration
