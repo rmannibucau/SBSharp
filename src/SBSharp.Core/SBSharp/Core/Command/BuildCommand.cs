@@ -84,7 +84,7 @@ public class BuildCommand
 
     private async Task PostProcessAsync()
     {
-        int counter = 1;
+        int counter = 0;
         foreach (var p in configuration.PostProcessing)
         {
             if (!string.IsNullOrWhiteSpace(p.LogMessage))
