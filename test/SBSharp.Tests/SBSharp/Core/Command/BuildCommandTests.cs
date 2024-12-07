@@ -45,53 +45,13 @@ public class BuildCommandTests
         await container.RunAsync();
 
         Assert.Equal(".test {}", File.ReadAllText(Path.Combine(output, "css/test.css")));
-        Assert.Equal(
-            """
-<?xml version="1.0" encoding="UTF-8" ?>
-<rss version="2.0">
-  <channel>
-    <title>Blog</title>
-    <description>Blog</description>
-    <link>http://localhost:4200</link>
-    <copyright>Built with SBSharp</copyright>
-    <ttl>1800</ttl>
-    <lastBuildDate>$date</lastBuildDate>
-    <pubDate>$date</pubDate>
-    <item>
-      <title>Index</title>
-      <description>Index
-Bla bla</description>
-      <link>http://localhost:4200/index.adoc</link>
-      <guid isPermaLink="false">index.adoc</guid>
-      <pubDate>$date</pubDate>
-    </item>
-    <item>
-      <title>Post #1</title>
-      <description>Post #1
-A post with default template.</description>
-      <link>http://localhost:4200/blog/post-1/simple-test.adoc</link>
-      <guid isPermaLink="false">blog/post-1/simple-test.adoc</guid>
-      <pubDate>$date</pubDate>
-    </item>
-</channel>
-</rss>
+        AssertRss(output);
+        AssertIndexJson(output);
+        AssertFiles(output);
+    }
 
-""",
-            new Regex("ate>[^<]+</(.+)ate>").Replace(
-                File.ReadAllText(Path.Combine(output, "rss.xml")),
-                "ate>$date</$1ate>"
-            )
-        );
-        Assert.Equal(
-            "{\"items\":[{\"slug\":\"index\",\"title\":\"Index\",\"description\":\"Index\\nBla bla\","
-                + "\"attributes\":{\"title\":\"Index\",\"description\":\"Index\\nBla bla\","
-                + "\"body\":\" <div class=\\\"paragraph\\\">\\n <p>\\nBla bla\\n </p>\\n </div>\\n\",\"publishedon\":\"0001-01-01T00:00:00.000\"}},"
-                + "{\"slug\":\"simple-test\",\"title\":\"Post #1\",\"description\":\"Post #1\\nA post with default template.\","
-                + "\"attributes\":{\"title\":\"Post #1\",\"description\":\"Post #1\\nA post with default template.\","
-                + "\"body\":\" <div class=\\\"paragraph\\\">\\n <p>\\nA post with default template.\\n </p>\\n </div>\\n\",\"publishedon\":\"0001-01-01T00:00:00.000\"}}]}",
-            File.ReadAllText(Path.Combine(output, "index.json"))
-        );
-
+    private void AssertFiles(string output)
+    {
         var files = Directory
             .EnumerateFiles(
                 output,
@@ -112,101 +72,101 @@ A post with default template.</description>
             {
                 "index.html",
                 """
-<html>
- <head>
-   <title>Index</title>
-   <meta name="slug" content="index">
-   <meta name="attr" content="Value1">
-   
-   
- </head>
- <body>
- <div class="landing>
-   <div class="paragraph">
- <p>
-Bla bla
- </p>
- </div>
+                <html>
+                 <head>
+                   <title>Index</title>
+                   <meta name="slug" content="index">
+                   <meta name="attr" content="Value1">
+                   
+                   
+                 </head>
+                 <body>
+                 <div class="landing>
+                   <div class="paragraph">
+                 <p>
+                Bla bla
+                 </p>
+                 </div>
 
-</div>
- 
- </body>
-</html>
-"""
+                </div>
+                 
+                 </body>
+                </html>
+                """
             },
             {
                 "blog/post-1/simple-test.html",
                 """
-<html>
- <head>
-   <title>Post #1</title>
-   <meta name="slug" content="simple-test">
-   <meta name="attr" content="local">
-   
-   
- </head>
- <body>
- <!-- top -->
-<div class="default>
-   <div class="paragraph">
- <p>
-A post with default template.
- </p>
- </div>
+                <html>
+                 <head>
+                   <title>Post #1</title>
+                   <meta name="slug" content="blog/post-1/simple-test">
+                   <meta name="attr" content="local">
+                   
+                   
+                 </head>
+                 <body>
+                 <!-- top -->
+                <div class="default>
+                   <div class="paragraph">
+                 <p>
+                A post with default template.
+                 </p>
+                 </div>
 
-</div>
- 
- </body>
-</html>
-"""
+                </div>
+                 
+                 </body>
+                </html>
+                """
             },
             {
                 "blog/1.html",
                 """
-<html>
- <head>
-   <title>Posts page 1</title>
-   <meta name="slug" content="blog/1">
-   <meta name="attr" content="Value1">
-   
-   
- </head>
- <body>
- <div class="default>
-      <ul>
-            <li>
-                <a href="simple-test">Post #1</a>
-            </li>
-    </ul>
-</div>
- 
- </body>
-</html>
-"""
+                <html>
+                 <head>
+                   <title>Posts page 1</title>
+                   <meta name="slug" content="blog/1">
+                   <meta name="attr" content="Value1">
+                   
+                   
+                 </head>
+                 <body>
+                 <div class="default>
+                      <ul>
+                            <li>
+                                <a href="blog/post-1/simple-test.html">Post #1</a>
+                            </li>
+                    </ul>
+                </div>
+                 
+                 </body>
+                </html>
+                """
             },
             {
                 "blog/author/rmannibucau/1.html",
                 """
-<html>
- <head>
-   <title>Posts of rmannibucau, page 1</title>
-   <meta name="slug" content="blog/author/rmannibucau/1">
-   <meta name="attr" content="Value1">
-   
-   
- </head>
- <body>
- <div class="default>
-      <ul>
-            <li>
-                <a href="simple-test">Post #1</a>
-            </li>
-    </ul>
-</div>
- 
- </body>
-</html>
-"""
+                <html>
+                 <head>
+                   <title>Posts of rmannibucau, page 1</title>
+                   <meta name="slug" content="blog/author/rmannibucau/1">
+                   <meta name="attr" content="Value1">
+                   
+                   
+                 </head>
+                 <body>
+                 <div class="default>
+                      <ul>
+                            <li>
+                                <a href="blog/post-1/simple-test.html">Post #1</a>
+                            </li>
+                    </ul>
+                </div>
+                 
+                 </body>
+                </html>
+                """
             }
         };
 
@@ -217,6 +177,60 @@ A post with default template.
         {
             Assert.Equal(expectedFiles[key], files[key]);
         }
+    }
+
+    private void AssertIndexJson(string output)
+    {
+        Assert.Equal(
+            "{\"items\":[{\"slug\":\"index\",\"title\":\"Index\",\"description\":\"Index\\nBla bla\","
+            + "\"attributes\":{\"title\":\"Index\",\"description\":\"Index\\nBla bla\","
+            + "\"body\":\" <div class=\\\"paragraph\\\">\\n <p>\\nBla bla\\n </p>\\n </div>\\n\",\"publishedon\":\"0001-01-01T00:00:00.000\"}},"
+            + "{\"slug\":\"blog/post-1/simple-test\",\"title\":\"Post #1\",\"description\":\"Post #1\\nA post with default template.\","
+            + "\"attributes\":{\"title\":\"Post #1\",\"description\":\"Post #1\\nA post with default template.\","
+            + "\"body\":\" <div class=\\\"paragraph\\\">\\n <p>\\nA post with default template.\\n </p>\\n </div>\\n\",\"publishedon\":\"0001-01-01T00:00:00.000\"}}]}",
+            File.ReadAllText(Path.Combine(output, "index.json"))
+        );
+    }
+
+    private void AssertRss(string output)
+    {
+        Assert.Equal(
+            """
+            <?xml version="1.0" encoding="UTF-8" ?>
+            <rss version="2.0">
+              <channel>
+                <title>Blog</title>
+                <description>Blog</description>
+                <link>http://localhost:4200</link>
+                <copyright>Built with SBSharp</copyright>
+                <ttl>1800</ttl>
+                <lastBuildDate>$date</lastBuildDate>
+                <pubDate>$date</pubDate>
+                <item>
+                  <title>Index</title>
+                  <description>Index
+            Bla bla</description>
+                  <link>http://localhost:4200/index.adoc</link>
+                  <guid isPermaLink="false">index.adoc</guid>
+                  <pubDate>$date</pubDate>
+                </item>
+                <item>
+                  <title>Post #1</title>
+                  <description>Post #1
+            A post with default template.</description>
+                  <link>http://localhost:4200/blog/post-1/simple-test.adoc</link>
+                  <guid isPermaLink="false">blog/post-1/simple-test.adoc</guid>
+                  <pubDate>$date</pubDate>
+                </item>
+            </channel>
+            </rss>
+
+            """,
+            new Regex("ate>[^<]+</(.+)ate>").Replace(
+                File.ReadAllText(Path.Combine(output, "rss.xml")),
+                "ate>$date</$1ate>"
+            )
+        );
     }
 
     private void CreateBlog(string root)
@@ -277,7 +291,7 @@ A post with default template.
                     @foreach (var post in Model.Context.Pages)
                     {
                         <li>
-                            <a href="@post.Slug">@post.Document.Header.Title</a>
+                            <a href="@(post.Slug).html">@post.Document.Header.Title</a>
                         </li>
                     }
                 </ul>

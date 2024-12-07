@@ -522,12 +522,9 @@ public class BuildCommand
                     handled.Reverse();
                 }
 
-                var attributes = new Dictionary<string, string>(spec.Attributes);
-
-                var subFolderIndex = spec.Slug.LastIndexOf('/');
                 var target = Path.Combine(
                     configuration.Output.Location,
-                    $"{spec.Slug.Replace("{Page}", "1").Replace("{Value}", "")}.html"
+                    $"{spec.Slug.Replace("{Page}", "1").Replace("{Value}", "v")}.html"
                 );
                 Directory.GetParent(target)!.Create();
 
@@ -694,7 +691,11 @@ public class BuildCommand
             var adoc = parser.Parse(await File.ReadAllLinesAsync(input).ConfigureAwait(false), ctx);
             var slugValue = adoc.Header.Attributes.TryGetValue("slug", out var slug)
                 ? slug
-                : Path.GetFileNameWithoutExtension(file);
+                : file.Replace(Path.DirectorySeparatorChar, '/');
+            if (slugValue.EndsWith(".adoc"))
+            {
+                slugValue = slugValue[..^5];
+            }
             return new Page(
                 configuration.Output.Attributes,
                 adoc,
@@ -731,11 +732,9 @@ public class BuildCommand
                 model
             )
             .ConfigureAwait(false);
-        var subFolderIndex = file.Replace('\\', '/').LastIndexOf('/');
-        var baseOutputDir = subFolderIndex > 0 ? $"{file[0..subFolderIndex]}/" : "";
         var target = Path.Combine(
             configuration.Output.Location,
-            $"{baseOutputDir}{model.Slug}.html"
+            $"{model.Slug}.html"
         );
         Directory.GetParent(target)!.Create();
         await File.WriteAllTextAsync(target, html).ConfigureAwait(false);
