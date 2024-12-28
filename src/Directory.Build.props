@@ -1,7 +1,7 @@
 <Project>
 
     <PropertyGroup>
-        <VersionPrefix>0.0.24</VersionPrefix>
+        <VersionPrefix>0.0.25</VersionPrefix>
         <Authors>rmannibucau</Authors>
         <Company>rmannibucau</Company>
         <PackageReadmeFile>README.md</PackageReadmeFile>
