@@ -349,9 +349,32 @@ public class BuildCommand
 
     private string RenderAdoc(Document document)
     {
+        AsciidoctorLikeHtmlRenderer.Configuration options;
+        if (document.Header.Attributes.Count > 0)
+        {
+            var attributes = new Dictionary<string, string>(renderingConfiguration.Attributes);
+            foreach (var kv in document.Header.Attributes)
+            {
+                attributes[kv.Key] = kv.Value;
+            }
+
+            options = new AsciidoctorLikeHtmlRenderer.Configuration
+            {
+                Attributes = attributes,
+                DataUriForAscii2Svg = renderingConfiguration.DataUriForAscii2Svg,
+                SkipGlobalContentWrapper = renderingConfiguration.SkipGlobalContentWrapper,
+                SupportDataAttributes = renderingConfiguration.SupportDataAttributes,
+                AssetsBase = renderingConfiguration.AssetsBase
+            };
+        }
+        else
+        {
+            options = renderingConfiguration;
+        }
+
         var renderer = configuration.Output.UseBootstrap
-            ? new BootstrapRender(renderingConfiguration)
-            : new AsciidoctorLikeHtmlRenderer(renderingConfiguration);
+            ? new BootstrapRender(options)
+            : new AsciidoctorLikeHtmlRenderer(options);
         renderer.Visit(document);
         return renderer.Result();
     }
