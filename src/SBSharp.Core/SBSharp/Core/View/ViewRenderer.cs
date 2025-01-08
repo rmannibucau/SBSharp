@@ -20,15 +20,18 @@ public class ViewRenderer
             configuration.Input.View);
         logger.LogInformation("Using view directory '{Directory}'", root);
 
-        engine = new RazorLightEngineBuilder()
+        var builder = new RazorLightEngineBuilder()
             .SetOperatingAssembly(typeof(ViewRenderer).Assembly)
             .UseFileSystemProject(root)
-            .UseMemoryCachingProvider()
             .UseOptions(new RazorLightOptions
             {
                 EnableDebugMode = false
-            })
-            .Build();
+            });
+        if (!this.configuration.Serve.WatchEnabled)
+        {
+            builder.UseMemoryCachingProvider();
+        }
+        engine = builder.Build();
     }
 
     public async Task<string> RenderAsync(string view, Page page)
