@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using RazorLight;
+using RazorLight.Caching;
 using RazorLight.Compilation;
 using SBSharp.Core.Configuration;
 
@@ -27,7 +28,14 @@ public class ViewRenderer
             {
                 EnableDebugMode = false
             });
-        if (!this.configuration.Serve.WatchEnabled)
+        if (!string.IsNullOrEmpty(configuration.Build.RazorLocalCache))
+        {
+            builder.UseCachingProvider(new FileSystemCachingProvider(
+                root,
+                this.configuration.Build.RazorLocalCache,
+                new FileHashCachingStrategy()));
+        }
+        else if (!this.configuration.Serve.WatchEnabled)
         {
             builder.UseMemoryCachingProvider();
         }

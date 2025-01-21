@@ -6,10 +6,13 @@ namespace SBSharp.Core.Configuration;
 public class SBSharpConfiguration
 {
     [Description("Input configuration.")]
-    public InputConfiguration Input { get; set; } = new InputConfiguration();
+    public InputConfiguration Input { get; set; } = new();
+
+    [Description("Build configuration.")]
+    public BuildConfiguration Build { get; set; } = new();
 
     [Description("Output configuration.")]
-    public OutputConfiguration Output { get; set; } = new OutputConfiguration();
+    public OutputConfiguration Output { get; set; } = new();
 
     [Description(
         "Post-processing configuration, often enables to work on the generated content to optimize it. "
@@ -18,10 +21,10 @@ public class SBSharpConfiguration
     public PostProcessingConfiguration[] PostProcessing { get; set; } = [];
 
     [Description("Watch specific configuration - `serve`and `watch` commands only.")]
-    public WatchConfiguration Watch { get; set; } = new WatchConfiguration();
+    public WatchConfiguration Watch { get; set; } = new();
 
     [Description("Serve specific configuration - `serve` command only.")]
-    public ServeConfiguration Serve { get; set; } = new ServeConfiguration();
+    public ServeConfiguration Serve { get; set; } = new();
 
     [Description("Tasks ran after the generation.")]
     public class PostProcessingConfiguration
@@ -52,6 +55,16 @@ public class SBSharpConfiguration
             "When enabled, how long (in milliseconds) to await before rebuilding the website - to avoid to keep rebuilding it when typing."
         )]
         public int Debouncing { get; set; } = 250;
+    }
+
+
+    [Description("Build specific configuration.")]
+    public class BuildConfiguration
+    {
+        [Description(
+            "If not empty, where to cache compiled templates for faster launch."
+        )]
+        public string RazorLocalCache { get; set; } = string.Empty;
     }
 
     [Description("Serve command specific configuration.")]
