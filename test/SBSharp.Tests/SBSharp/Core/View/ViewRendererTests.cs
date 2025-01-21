@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using NAsciidoc.Model;
 using SBSharp.Core.Configuration;
 using SBSharp.Tests.Temp;
 
@@ -17,9 +18,9 @@ public class ViewRendererTests
 
         using var factory = new NullLoggerFactory();
         var html = await new ViewRenderer(
-            new Configuration.SBSharpConfiguration
+            new SBSharpConfiguration
             {
-                Input = new Configuration.SBSharpConfiguration.InputConfiguration
+                Input = new SBSharpConfiguration.InputConfiguration
                 {
                     Location = baseDir.Value,
                     View = "views"
@@ -65,7 +66,7 @@ public class ViewRendererTests
             );
             Assert.Equal("will be some-sample-file.html", html);
 
-            var compiled = Path.Combine(cache, "db4c8ac4aea85fd63a61216cfc41d1dc.dll");
+            var compiled = Path.Combine(cache, "tpl.cshtml.dll");
             Assert.True(File.Exists(compiled), compiled);
         }
     }
@@ -74,14 +75,14 @@ public class ViewRendererTests
     {
         return new Page( // fake a loaded model, we just use the slug here
             ImmutableDictionary<string, string>.Empty,
-            new NAsciidoc.Model.Document(
-                new NAsciidoc.Model.Header(
+            new Document(
+                new Header(
                     "",
                     null,
                     null,
                     ImmutableDictionary<string, string>.Empty
                 ),
-                new NAsciidoc.Model.Body([])
+                new Body([])
             ),
             () => "Content",
             "some-sample-file",

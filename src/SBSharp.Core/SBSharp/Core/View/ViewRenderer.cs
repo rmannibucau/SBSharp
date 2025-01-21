@@ -9,14 +9,11 @@ namespace SBSharp.Core.View;
 
 public class ViewRenderer
 {
-    private readonly SBSharpConfiguration configuration;
     private readonly RazorLightEngine engine;
     private readonly ConcurrentDictionary<string, Task<Func<ITemplatePage>>> cache = new();
 
     public ViewRenderer(SBSharpConfiguration configuration, ILogger<ViewRenderer> logger)
     {
-        this.configuration = configuration;
-
         var root = Path.Combine(Directory.GetCurrentDirectory(), configuration.Input.Location,
             configuration.Input.View);
         logger.LogInformation("Using view directory '{Directory}'", root);
@@ -26,16 +23,18 @@ public class ViewRenderer
             .UseFileSystemProject(root)
             .UseOptions(new RazorLightOptions
             {
-                EnableDebugMode = false
+                EnableDebugMode = false,
+                PreRenderCallbacks = []
             });
         if (!string.IsNullOrEmpty(configuration.Build.RazorLocalCache))
         {
             builder.UseCachingProvider(new FileSystemCachingProvider(
                 root,
-                this.configuration.Build.RazorLocalCache,
-                new FileHashCachingStrategy()));
+                configuration.Build.RazorLocalCache,
+                // hash strategy assumes file exists so we can't use it the first time
+                new SimpleFileCachingStrategy()));
         }
-        else if (!this.configuration.Serve.WatchEnabled)
+        else if (!configuration.Serve.WatchEnabled)
         {
             builder.UseMemoryCachingProvider();
         }
@@ -50,6 +49,12 @@ public class ViewRenderer
         {
             var promise = cache.GetOrAdd(view, async k =>
             {
+                // try in the cache first (filesystem case)
+                if (engine.Handler.IsCachingEnabled &&
+                    engine.Handler.Cache.RetrieveTemplate(view) is { Success: true } result)
+                {
+                    return result.Template.TemplatePageFactory;
+                }
                 var templateDescriptor = await engine.Handler.Compiler.CompileAsync(k);
                 return engine.Handler.FactoryProvider.CreateFactory(templateDescriptor);
             });
