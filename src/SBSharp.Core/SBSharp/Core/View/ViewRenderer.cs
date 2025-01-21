@@ -43,7 +43,8 @@ public class ViewRenderer
 
     public async Task<string> RenderAsync(string view, Page page)
     {
-        // razorlight has a caching bug (leading to computing N times > 1 the same view and compilation with roselyn is slow)
+        // RazorLight has a caching bug (leading to computing N times > 1 the same view
+        // and compilation with roselyn is slow)
         // so we add our caching layer on top of it
         try
         {
@@ -51,7 +52,7 @@ public class ViewRenderer
             {
                 // try in the cache first (filesystem case)
                 if (engine.Handler.IsCachingEnabled &&
-                    engine.Handler.Cache.RetrieveTemplate(view) is { Success: true } result)
+                    engine.Handler.Cache.RetrieveTemplate($"{view}.cshtml") is { Success: true } result)
                 {
                     return result.Template.TemplatePageFactory;
                 }
