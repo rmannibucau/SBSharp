@@ -471,17 +471,19 @@ public class BuildCommand
                         : null;
                     if (
                         postDate is not null
-                        && new DateTimeOffset(
-                            DateOnly.ParseExact(postDate, "yyyyMMdd", CultureInfo.InvariantCulture),
-                            TimeOnly.MinValue, TimeSpan.Zero)
-                            > notBefore
                     )
                     {
-                        logger.LogInformation(
-                            "Ignoring {file} since it is not yet published",
-                            file
-                        );
-                        return;
+                        var test = new DateTimeOffset(
+                            DateOnly.ParseExact(postDate, "yyyyMMdd", CultureInfo.InvariantCulture),
+                            TimeOnly.MinValue, TimeSpan.Zero);
+                        if (test > notBefore)
+                        {
+                            logger.LogInformation(
+                                "Ignoring {file} since it is not yet published ({Date})",
+                                file, test
+                            );
+                            return;
+                        }
                     }
                 }
                 lock (pages)
