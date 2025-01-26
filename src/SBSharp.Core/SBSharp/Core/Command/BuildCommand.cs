@@ -451,7 +451,12 @@ public class BuildCommand
         ExecutionDataflowBlockOptions blockOptions
     )
     {
-        DateTime? notBefore = configuration.Output.NotBeforeToday ? DateTime.UtcNow : null;
+        DateTimeOffset? notBefore = configuration.Output.NotBeforeToday ? DateTimeOffset.UtcNow : null;
+        if (notBefore is not null)
+        {
+            logger.LogInformation("Using today={Today}", notBefore);
+        }
+
         var loadModelBlock = new ActionBlock<string>(
             async file =>
             {
@@ -468,7 +473,7 @@ public class BuildCommand
                         postDate is not null
                         && new DateTimeOffset(
                             DateOnly.ParseExact(postDate, "yyyyMMdd", CultureInfo.InvariantCulture),
-                            TimeOnly.MaxValue, TimeSpan.Zero)
+                            TimeOnly.MinValue, TimeSpan.Zero)
                             > notBefore
                     )
                     {
