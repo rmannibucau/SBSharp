@@ -6,3 +6,5 @@ obj
 global.json
 _site
 SBSharp.sln.DotSettings.user
+.idea
+*.iml

@@ -226,6 +226,19 @@ public class SBSharpConfiguration
         public bool ReverseOrderBy { get; set; } = true;
     }
 
+    [Description("Remote view (zip) download configuration.")]
+    public class RemoteViewConfiguration
+    {
+        [Description("Static basic/bearer `Authorization` header if not empty.")]
+        public string Authorization = string.Empty;
+
+        [Description("If not empty, overrides `Input.View` output, can enable to include assets in another folder for example.")]
+        public string OverrideView = string.Empty;
+
+        [Description("Where to download views from, ignored if empty.")]
+        public string Url = string.Empty;
+    }
+
     [Description("Site input configuration - page content, views, assets, ....")]
     public class InputConfiguration
     {
@@ -237,6 +250,9 @@ public class SBSharpConfiguration
 
         [Description("View directory, can be absolute or relative to site `Location`.")]
         public string View { get; set; } = "_views";
+
+        [Description("if not `false`, the views (ending in `View` configuration directory) will be downloaded.")]
+        public RemoteViewConfiguration RemoteView { get; set; } = new();
 
         [Description("Assets directory, can be absolute or relative to site `Location`.")]
         public string AssetsLocation { get; set; } = "_assets";

@@ -63,6 +63,8 @@ public class BuildCommand
     {
         var outputBase = configuration.Output.Location;
 
+        await views.MaybeInit().ConfigureAwait(false);
+
         var rendered = RenderAsync().ConfigureAwait(false);
         await CopyAssetsAsync().ConfigureAwait(false);
         var count = await rendered;

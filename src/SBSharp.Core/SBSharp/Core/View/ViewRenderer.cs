@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.IO.Compression;
 using Microsoft.Extensions.Logging;
 using RazorLight;
 using RazorLight.Caching;
@@ -11,11 +12,15 @@ public class ViewRenderer
 {
     private readonly RazorLightEngine engine;
     private readonly ConcurrentDictionary<string, Task<Func<ITemplatePage>>> cache = new();
+    private readonly SBSharpConfiguration configuration;
+    private readonly ILogger<ViewRenderer> logger;
+    private int initDone = 0;
 
     public ViewRenderer(SBSharpConfiguration configuration, ILogger<ViewRenderer> logger)
     {
-        var root = Path.Combine(Directory.GetCurrentDirectory(), configuration.Input.Location,
-            configuration.Input.View);
+        this.configuration = configuration;
+        this.logger = logger;
+        var root = Root();
         logger.LogInformation("Using view directory '{Directory}'", root);
 
         var builder = new RazorLightEngineBuilder()
@@ -39,6 +44,14 @@ public class ViewRenderer
             builder.UseMemoryCachingProvider();
         }
         engine = builder.Build();
+    }
+
+    private string Root()
+    {
+        return Path.Combine(
+            Directory.GetCurrentDirectory(),
+            configuration.Input.Location,
+            configuration.Input.View);
     }
 
     public async Task<string> RenderAsync(string view, Page page)
@@ -66,5 +79,46 @@ public class ViewRenderer
         {
             throw new InvalidOperationException($"Error compiling view '{view}': {e.Message}", e);
         }
+    }
+
+    public async Task MaybeInit()
+    {
+        if (Interlocked.Exchange(ref initDone, 1) == 1) // skip in serve mode
+        {
+            return;
+        }
+        if (string.IsNullOrEmpty(configuration.Input.RemoteView.Url))
+        {
+            return;
+        }
+        
+        var root = Root();
+        logger.LogInformation("Downloading '{Url}' to '{Location}'", configuration.Input.RemoteView.Url, root);
+        
+        var httpRequestMessage = new HttpRequestMessage
+        {
+            Method = HttpMethod.Get,
+            RequestUri = new Uri(configuration.Input.RemoteView.Url),
+        };
+        if (!string.IsNullOrEmpty(configuration.Input.RemoteView.Authorization))
+        {
+            httpRequestMessage.Headers.Add("Authorization", configuration.Input.RemoteView.Authorization);
+        }
+
+        using var httpClient = new HttpClient(new SocketsHttpHandler
+        {
+            AllowAutoRedirect = true,
+            MaxAutomaticRedirections = 5,
+        });
+        using var response = await httpClient.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode)
+        {
+            logger.LogError("Invalid view download: HTTP {Status}", response.StatusCode);
+            response.EnsureSuccessStatusCode(); // make it fail
+        }
+        using var zip = new ZipArchive(await response.Content.ReadAsStreamAsync().ConfigureAwait(false));
+        zip.ExtractToDirectory(string.IsNullOrEmpty(configuration.Input.RemoteView.OverrideView)
+            ? configuration.Input.View
+            : configuration.Input.RemoteView.OverrideView);
     }
 }
