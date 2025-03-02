@@ -21,8 +21,8 @@ public class SourceScannerTests
             {
                 Input = new Configuration.SBSharpConfiguration.InputConfiguration
                 {
-                    Location = tmp.Value
-                }
+                    Location = tmp.Value,
+                },
             }
         )
             .ScanSources()

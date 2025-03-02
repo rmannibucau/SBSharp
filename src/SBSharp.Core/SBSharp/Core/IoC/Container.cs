@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
 using SBSharp.Core.Command;
 using SBSharp.Core.Configuration;
 using SBSharp.Core.Scanner;
@@ -10,15 +9,14 @@ using SBSharp.Core.Watcher;
 
 namespace SBSharp.Core.IoC;
 
-public class Container : IDisposable
+public static class IoCExtensions
 {
-    private readonly ServiceProvider provider;
-    private readonly string[] args;
-
-    public Container(string[] args)
+    public static void RegisterBeans(
+        this ServiceCollection beans,
+        string[] args,
+        bool autoConfigureLogging = true
+    )
     {
-        this.args = args;
-
         var configuration = new SBSharpConfiguration();
         var globalConfiguration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
@@ -28,25 +26,27 @@ public class Container : IDisposable
             .Build();
         globalConfiguration.GetSection("sbsharp").Bind(configuration);
 
-        var beans = new ServiceCollection();
-
         // stack
-        beans.AddLogging(config =>
+        if (autoConfigureLogging)
         {
-            var loggingConfiguration = globalConfiguration.GetSection("Logging");
-            if (!loggingConfiguration.GetChildren().Any())
+            beans.AddLogging(config =>
             {
-                config.AddSimpleConsole(it =>
+                var loggingConfiguration = globalConfiguration.GetSection("Logging");
+                if (!loggingConfiguration.GetChildren().Any())
                 {
-                    it.SingleLine = true;
-                    it.TimestampFormat = "yyyy-MM-ddTHH:mm:ssZ ";
-                });
-            }
-            else
-            {
-                config.AddConfiguration(loggingConfiguration);
-            }
-        });
+                    config.AddSimpleConsole(it =>
+                    {
+                        it.SingleLine = true;
+                        it.TimestampFormat = "yyyy-MM-ddTHH:mm:ssZ ";
+                    });
+                }
+                else
+                {
+                    config.AddConfiguration(loggingConfiguration);
+                }
+            });
+        }
+
         beans.AddSingleton(configuration);
 
         // services
@@ -62,25 +62,39 @@ public class Container : IDisposable
         beans.AddTransient(p => new Lazy<ServeCommand>(() => p.GetService<ServeCommand>()!));
         beans.AddTransient<WatchCommand>();
         beans.AddTransient(p => new Lazy<WatchCommand>(() => p.GetService<WatchCommand>()!));
-
-        provider = beans.BuildServiceProvider();
     }
+}
+
+public class Container : IDisposable
+{
+    private readonly string[] args;
+
+    public Container(
+        string[] args,
+        Action<ServiceCollection>? servicesCustomizer = null,
+        bool autoConfigureLogging = true
+    )
+    {
+        this.args = args;
+
+        var beans = new ServiceCollection();
+        servicesCustomizer?.Invoke(beans);
+        beans.RegisterBeans(this.args, autoConfigureLogging);
+        Provider = beans.BuildServiceProvider();
+    }
+
+    public ServiceProvider Provider { get; }
 
     public async Task<int> RunAsync()
     {
-        return await provider
+        return await Provider
             .GetService<CommandExecutor>()!
-            .ExecuteAsync(args.Length == 0 ? "" : args[0]);
-    }
-
-    public void Stop()
-    {
-        provider.Dispose();
+            .ExecuteAsync(args.Length == 0 ? string.Empty : args[0]);
     }
 
     public void Dispose()
     {
         GC.SuppressFinalize(this);
-        Stop();
+        Provider.Dispose();
     }
 }

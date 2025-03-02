@@ -39,7 +39,7 @@ public class BuildCommandTests
                 // output
                 $"--sbsharp:Output:Location={output}",
                 "--sbsharp:Output:Attributes:Key1=Value1",
-                "--sbsharp:Output:Attributes:Key2=Value2" // as a reminder of the syntax
+                "--sbsharp:Output:Attributes:Key2=Value2", // as a reminder of the syntax
             ]
         );
         await container.RunAsync();
@@ -72,102 +72,102 @@ public class BuildCommandTests
             {
                 "index.html",
                 """
-                <html>
-                 <head>
-                   <title>Index</title>
-                   <meta name="slug" content="index">
-                   <meta name="attr" content="Value1">
-                   
-                   
-                 </head>
-                 <body>
-                 <div class="landing>
-                   <div class="paragraph">
-                 <p>
-                Bla bla
-                 </p>
-                 </div>
+                    <html>
+                     <head>
+                       <title>Index</title>
+                       <meta name="slug" content="index">
+                       <meta name="attr" content="Value1">
+                       
+                       
+                     </head>
+                     <body>
+                     <div class="landing>
+                       <div class="paragraph">
+                     <p>
+                    Bla bla
+                     </p>
+                     </div>
 
-                </div>
-                 
-                 </body>
-                </html>
-                """
+                    </div>
+                     
+                     </body>
+                    </html>
+                    """
             },
             {
                 "blog/post-1/simple-test.html",
                 """
-                <html>
-                 <head>
-                   <title>Post #1</title>
-                   <meta name="slug" content="blog/post-1/simple-test">
-                   <meta name="attr" content="local">
-                   
-                   
-                 </head>
-                 <body>
-                 <!-- top -->
-                <div class="default>
-                   <div class="paragraph">
-                 <p>
-                A post with default template.
-                 </p>
-                 </div>
+                    <html>
+                     <head>
+                       <title>Post #1</title>
+                       <meta name="slug" content="blog/post-1/simple-test">
+                       <meta name="attr" content="local">
+                       
+                       
+                     </head>
+                     <body>
+                     <!-- top -->
+                    <div class="default>
+                       <div class="paragraph">
+                     <p>
+                    A post with default template.
+                     </p>
+                     </div>
 
-                </div>
-                 
-                 </body>
-                </html>
-                """
+                    </div>
+                     
+                     </body>
+                    </html>
+                    """
             },
             {
                 "blog/1.html",
                 """
-                <html>
-                 <head>
-                   <title>Posts page 1</title>
-                   <meta name="slug" content="blog/1">
-                   <meta name="attr" content="Value1">
-                   
-                   
-                 </head>
-                 <body>
-                 <div class="default>
-                      <ul>
-                            <li>
-                                <a href="blog/post-1/simple-test.html">Post #1</a>
-                            </li>
-                    </ul>
-                </div>
-                 
-                 </body>
-                </html>
-                """
+                    <html>
+                     <head>
+                       <title>Posts page 1</title>
+                       <meta name="slug" content="blog/1">
+                       <meta name="attr" content="Value1">
+                       
+                       
+                     </head>
+                     <body>
+                     <div class="default>
+                          <ul>
+                                <li>
+                                    <a href="blog/post-1/simple-test.html">Post #1</a>
+                                </li>
+                        </ul>
+                    </div>
+                     
+                     </body>
+                    </html>
+                    """
             },
             {
                 "blog/author/rmannibucau/1.html",
                 """
-                <html>
-                 <head>
-                   <title>Posts of rmannibucau, page 1</title>
-                   <meta name="slug" content="blog/author/rmannibucau/1">
-                   <meta name="attr" content="Value1">
-                   
-                   
-                 </head>
-                 <body>
-                 <div class="default>
-                      <ul>
-                            <li>
-                                <a href="blog/post-1/simple-test.html">Post #1</a>
-                            </li>
-                    </ul>
-                </div>
-                 
-                 </body>
-                </html>
-                """
-            }
+                    <html>
+                     <head>
+                       <title>Posts of rmannibucau, page 1</title>
+                       <meta name="slug" content="blog/author/rmannibucau/1">
+                       <meta name="attr" content="Value1">
+                       
+                       
+                     </head>
+                     <body>
+                     <div class="default>
+                          <ul>
+                                <li>
+                                    <a href="blog/post-1/simple-test.html">Post #1</a>
+                                </li>
+                        </ul>
+                    </div>
+                     
+                     </body>
+                    </html>
+                    """
+            },
         };
 
         // normally this line is sufficient but assert error messages are awful
@@ -183,11 +183,11 @@ public class BuildCommandTests
     {
         Assert.Equal(
             "{\"items\":[{\"slug\":\"index\",\"title\":\"Index\",\"description\":\"Index\\nBla bla\","
-            + "\"attributes\":{\"title\":\"Index\",\"description\":\"Index\\nBla bla\","
-            + "\"body\":\" <div class=\\\"paragraph\\\">\\n <p>\\nBla bla\\n </p>\\n </div>\\n\",\"publishedon\":\"0001-01-01T00:00:00.000\"}},"
-            + "{\"slug\":\"blog/post-1/simple-test\",\"title\":\"Post #1\",\"description\":\"Post #1\\nA post with default template.\","
-            + "\"attributes\":{\"title\":\"Post #1\",\"description\":\"Post #1\\nA post with default template.\","
-            + "\"body\":\" <div class=\\\"paragraph\\\">\\n <p>\\nA post with default template.\\n </p>\\n </div>\\n\",\"publishedon\":\"0001-01-01T00:00:00.000\"}}]}",
+                + "\"attributes\":{\"title\":\"Index\",\"description\":\"Index\\nBla bla\","
+                + "\"body\":\" <div class=\\\"paragraph\\\">\\n <p>\\nBla bla\\n </p>\\n </div>\\n\",\"publishedon\":\"0001-01-01T00:00:00.000\"}},"
+                + "{\"slug\":\"blog/post-1/simple-test\",\"title\":\"Post #1\",\"description\":\"Post #1\\nA post with default template.\","
+                + "\"attributes\":{\"title\":\"Post #1\",\"description\":\"Post #1\\nA post with default template.\","
+                + "\"body\":\" <div class=\\\"paragraph\\\">\\n <p>\\nA post with default template.\\n </p>\\n </div>\\n\",\"publishedon\":\"0001-01-01T00:00:00.000\"}}]}",
             File.ReadAllText(Path.Combine(output, "index.json"))
         );
     }

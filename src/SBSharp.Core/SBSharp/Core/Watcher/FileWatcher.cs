@@ -76,17 +76,16 @@ public class FileWatcher(SBSharpConfiguration configuration, ILogger<FileWatcher
         params SBSharpConfiguration.GlobbingConfiguration[] globbing
     )
     {
-        FileSystemWatcher watcher =
-            new(location)
-            {
-                IncludeSubdirectories = true,
-                NotifyFilter =
-                    NotifyFilters.Attributes
-                    | NotifyFilters.Size
-                    | NotifyFilters.FileName
-                    | NotifyFilters.DirectoryName
-                    | NotifyFilters.LastWrite
-            };
+        FileSystemWatcher watcher = new(location)
+        {
+            IncludeSubdirectories = true,
+            NotifyFilter =
+                NotifyFilters.Attributes
+                | NotifyFilters.Size
+                | NotifyFilters.FileName
+                | NotifyFilters.DirectoryName
+                | NotifyFilters.LastWrite,
+        };
 
         // we are not 100% equivalent between globbing and watched filters
         // but it enables to detect changes well enough

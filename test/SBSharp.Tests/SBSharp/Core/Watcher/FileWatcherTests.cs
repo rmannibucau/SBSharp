@@ -19,8 +19,8 @@ public class FileWatcherTests
             {
                 Input = new Configuration.SBSharpConfiguration.InputConfiguration
                 {
-                    Location = tmp.Value
-                }
+                    Location = tmp.Value,
+                },
             },
             new Logger<FileWatcher>(factory)
         ).Watch(() =>

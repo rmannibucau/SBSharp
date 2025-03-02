@@ -21,11 +21,9 @@ public record Page(
 {
     public string? Attribute(string key)
     {
-        return Document.Header.Attributes.TryGetValue(key, out var l)
-            ? l
-            : GlobalAttributes.TryGetValue(key, out var g)
-                ? g
-                : null;
+        return Document.Header.Attributes.TryGetValue(key, out var l) ? l
+            : GlobalAttributes.TryGetValue(key, out var g) ? g
+            : null;
     }
 
     public DateOnly PublishedOn

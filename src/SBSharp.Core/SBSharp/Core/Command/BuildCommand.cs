@@ -55,7 +55,7 @@ public class BuildCommand
             DataUriForAscii2Svg = true,
             SkipGlobalContentWrapper = true,
             SupportDataAttributes = true,
-            AssetsBase = configuration.Input.Location
+            AssetsBase = configuration.Input.Location,
         };
     }
 
@@ -107,7 +107,7 @@ public class BuildCommand
                 WorkingDirectory = dir,
                 WindowStyle = ProcessWindowStyle.Hidden,
                 RedirectStandardError = true,
-                RedirectStandardOutput = true
+                RedirectStandardOutput = true,
             };
             foreach (var env in p.Environment)
             {
@@ -302,15 +302,14 @@ public class BuildCommand
                             "index-body" => page.Item2.Body(),
                             "index-description" => description,
                             "index-gravatar" => page.Item2.Gravatar,
-                            "index-publishedon"
-                                => new DateTime(page.Item2.PublishedOn, TimeOnly.MinValue).ToString(
-                                    "yyyy-MM-ddTHH:mm:ss.fffK"
-                                ),
+                            "index-publishedon" => new DateTime(
+                                page.Item2.PublishedOn,
+                                TimeOnly.MinValue
+                            ).ToString("yyyy-MM-ddTHH:mm:ss.fffK"),
                             // banalized attribute (custom)
-                            _
-                                => header.Attributes.TryGetValue(it, out var v1)
-                                    ? v1
-                                    : (header.Attributes.TryGetValue(it, out var v2) ? v2 : "")
+                            _ => header.Attributes.TryGetValue(it, out var v1)
+                                ? v1
+                                : (header.Attributes.TryGetValue(it, out var v2) ? v2 : ""),
                         };
                         return (
                             Key: it.StartsWith("index-") ? it["index-".Length..] : it,
@@ -331,7 +330,7 @@ public class BuildCommand
                         {
                             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                         }
                     ).JsonIndex
                 ),
@@ -366,7 +365,7 @@ public class BuildCommand
                 DataUriForAscii2Svg = renderingConfiguration.DataUriForAscii2Svg,
                 SkipGlobalContentWrapper = renderingConfiguration.SkipGlobalContentWrapper,
                 SupportDataAttributes = renderingConfiguration.SupportDataAttributes,
-                AssetsBase = renderingConfiguration.AssetsBase
+                AssetsBase = renderingConfiguration.AssetsBase,
             };
         }
         else
@@ -408,7 +407,7 @@ public class BuildCommand
                     Access = FileAccess.Write,
                     Options = FileOptions.WriteThrough,
                     BufferSize = 0,
-                    PreallocationSize = source.Length
+                    PreallocationSize = source.Length,
                 }
             );
             await from.CopyToAsync(to).ConfigureAwait(false);
@@ -425,7 +424,7 @@ public class BuildCommand
             EnsureOrdered = false,
             TaskScheduler = TaskScheduler.Default,
             BoundedCapacity = 1_024,
-            CancellationToken = new CancellationToken()
+            CancellationToken = new CancellationToken(),
         };
 
         var pages = new List<(string, Page)>(16);
@@ -453,7 +452,9 @@ public class BuildCommand
         ExecutionDataflowBlockOptions blockOptions
     )
     {
-        DateTimeOffset? notBefore = configuration.Output.NotBeforeToday ? DateTimeOffset.UtcNow : null;
+        DateTimeOffset? notBefore = configuration.Output.NotBeforeToday
+            ? DateTimeOffset.UtcNow
+            : null;
         if (notBefore is not null)
         {
             logger.LogInformation("Using today={Today}", notBefore);
@@ -471,18 +472,19 @@ public class BuildCommand
                     )
                         ? date
                         : null;
-                    if (
-                        postDate is not null
-                    )
+                    if (postDate is not null)
                     {
                         var test = new DateTimeOffset(
                             DateOnly.ParseExact(postDate, "yyyyMMdd", CultureInfo.InvariantCulture),
-                            TimeOnly.MinValue, TimeSpan.Zero);
+                            TimeOnly.MinValue,
+                            TimeSpan.Zero
+                        );
                         if (test > notBefore)
                         {
                             logger.LogInformation(
                                 "Ignoring {file} since it is not yet published ({Date})",
-                                file, test
+                                file,
+                                test
                             );
                             return;
                         }
@@ -766,10 +768,7 @@ public class BuildCommand
                 model
             )
             .ConfigureAwait(false);
-        var target = Path.Combine(
-            configuration.Output.Location,
-            $"{model.Slug}.html"
-        );
+        var target = Path.Combine(configuration.Output.Location, $"{model.Slug}.html");
         Directory.GetParent(target)!.Create();
         await File.WriteAllTextAsync(target, html).ConfigureAwait(false);
     }

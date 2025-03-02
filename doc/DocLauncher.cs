@@ -17,9 +17,7 @@ public sealed class DocLauncher
     {
         // assume running from root (or doc) dir: [DOC_CMD=serve] dotnet run --project doc
         var baseDir = Path.GetFullPath(
-            Directory
-                .GetParent(AppContext.BaseDirectory)!
-                .Parent!.Parent!.Parent!.FullName
+            Directory.GetParent(AppContext.BaseDirectory)!.Parent!.Parent!.Parent!.FullName
         );
         var partialsDir = Directory.CreateDirectory($"{baseDir}/_content/_partials").FullName;
 
@@ -32,7 +30,7 @@ public sealed class DocLauncher
                 .. args,
                 $"--sbsharp:Input:Location={module}/_content",
                 $"--sbsharp:Input:View={module}/_views",
-                $"--sbsharp:Output:Location={module}/_site"
+                $"--sbsharp:Output:Location={module}/_site",
             ]
         );
         return await container.RunAsync();

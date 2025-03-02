@@ -57,13 +57,10 @@ public class SBSharpConfiguration
         public int Debouncing { get; set; } = 250;
     }
 
-
     [Description("Build specific configuration.")]
     public class BuildConfiguration
     {
-        [Description(
-            "If not empty, where to cache compiled templates for faster launch."
-        )]
+        [Description("If not empty, where to cache compiled templates for faster launch.")]
         public string RazorLocalCache { get; set; } = string.Empty;
     }
 
@@ -171,7 +168,7 @@ public class SBSharpConfiguration
             new Dictionary<string, string>
             {
                 { "partialsdir", "_partials" },
-                { "imagesdir", "_images" }
+                { "imagesdir", "_images" },
             };
     }
 
@@ -232,7 +229,9 @@ public class SBSharpConfiguration
         [Description("Static basic/bearer `Authorization` header if not empty.")]
         public string Authorization = string.Empty;
 
-        [Description("If not empty, overrides `Input.View` output, can enable to include assets in another folder for example.")]
+        [Description(
+            "If not empty, overrides `Input.View` output, can enable to include assets in another folder for example."
+        )]
         public string OverrideView = string.Empty;
 
         [Description("Where to download views from, ignored if empty.")]
@@ -251,7 +250,9 @@ public class SBSharpConfiguration
         [Description("View directory, can be absolute or relative to site `Location`.")]
         public string View { get; set; } = "_views";
 
-        [Description("if not `false`, the views (ending in `View` configuration directory) will be downloaded.")]
+        [Description(
+            "if not `false`, the views (ending in `View` configuration directory) will be downloaded."
+        )]
         public RemoteViewConfiguration RemoteView { get; set; } = new();
 
         [Description("Assets directory, can be absolute or relative to site `Location`.")]
@@ -264,7 +265,7 @@ public class SBSharpConfiguration
             new()
             {
                 Includes = ["**/*.css", "**/*.js", "**/*.jpg", "**/*.png", "**/*.gif"],
-                Excludes = ["**/_site/**"]
+                Excludes = ["**/_site/**"],
             };
 
         [Description("Site source (pages) file globbing (includes/excludes).")]
@@ -272,7 +273,7 @@ public class SBSharpConfiguration
             new()
             {
                 Includes = ["**/*.adoc", "**/*.asciidoc"],
-                Excludes = ["**/*.partial.adoc", "**/*.partial.asciidoc"]
+                Excludes = ["**/*.partial.adoc", "**/*.partial.asciidoc"],
             };
     }
 

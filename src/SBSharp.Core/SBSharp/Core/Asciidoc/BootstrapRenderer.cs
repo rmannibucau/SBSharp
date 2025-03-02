@@ -19,7 +19,7 @@ public class BootstrapRender(AsciidoctorLikeHtmlRenderer.Configuration configura
                     Admonition.AdmonitionLevel.Important => "primary",
                     Admonition.AdmonitionLevel.Warning => "warning",
                     Admonition.AdmonitionLevel.Caution => "danger",
-                    _ => "secondary"
+                    _ => "secondary",
                 }
             )
             .Append("\" role=\"alert\">");

@@ -26,18 +26,17 @@ public class ViewRenderer
         var builder = new RazorLightEngineBuilder()
             .SetOperatingAssembly(typeof(ViewRenderer).Assembly)
             .UseFileSystemProject(root)
-            .UseOptions(new RazorLightOptions
-            {
-                EnableDebugMode = false,
-                PreRenderCallbacks = []
-            });
+            .UseOptions(new RazorLightOptions { EnableDebugMode = false, PreRenderCallbacks = [] });
         if (!string.IsNullOrEmpty(configuration.Build.RazorLocalCache))
         {
-            builder.UseCachingProvider(new FileSystemCachingProvider(
-                root,
-                configuration.Build.RazorLocalCache,
-                // hash strategy assumes file exists so we can't use it the first time
-                new SimpleFileCachingStrategy()));
+            builder.UseCachingProvider(
+                new FileSystemCachingProvider(
+                    root,
+                    configuration.Build.RazorLocalCache,
+                    // hash strategy assumes file exists so we can't use it the first time
+                    new SimpleFileCachingStrategy()
+                )
+            );
         }
         else if (!configuration.Serve.WatchEnabled)
         {
@@ -51,7 +50,8 @@ public class ViewRenderer
         return Path.Combine(
             Directory.GetCurrentDirectory(),
             configuration.Input.Location,
-            configuration.Input.View);
+            configuration.Input.View
+        );
     }
 
     public async Task<string> RenderAsync(string view, Page page)
@@ -61,17 +61,23 @@ public class ViewRenderer
         // so we add our caching layer on top of it
         try
         {
-            var promise = cache.GetOrAdd(view, async k =>
-            {
-                // try in the cache first (filesystem case)
-                if (engine.Handler.IsCachingEnabled &&
-                    engine.Handler.Cache.RetrieveTemplate($"{view}.cshtml") is { Success: true } result)
+            var promise = cache.GetOrAdd(
+                view,
+                async k =>
                 {
-                    return result.Template.TemplatePageFactory;
+                    // try in the cache first (filesystem case)
+                    if (
+                        engine.Handler.IsCachingEnabled
+                        && engine.Handler.Cache.RetrieveTemplate($"{view}.cshtml")
+                            is { Success: true } result
+                    )
+                    {
+                        return result.Template.TemplatePageFactory;
+                    }
+                    var templateDescriptor = await engine.Handler.Compiler.CompileAsync(k);
+                    return engine.Handler.FactoryProvider.CreateFactory(templateDescriptor);
                 }
-                var templateDescriptor = await engine.Handler.Compiler.CompileAsync(k);
-                return engine.Handler.FactoryProvider.CreateFactory(templateDescriptor);
-            });
+            );
             var template = await promise.ConfigureAwait(false);
             return await engine.RenderTemplateAsync(template(), page).ConfigureAwait(false);
         }
@@ -91,10 +97,14 @@ public class ViewRenderer
         {
             return;
         }
-        
+
         var root = Root();
-        logger.LogInformation("Downloading '{Url}' to '{Location}'", configuration.Input.RemoteView.Url, root);
-        
+        logger.LogInformation(
+            "Downloading '{Url}' to '{Location}'",
+            configuration.Input.RemoteView.Url,
+            root
+        );
+
         var httpRequestMessage = new HttpRequestMessage
         {
             Method = HttpMethod.Get,
@@ -102,23 +112,30 @@ public class ViewRenderer
         };
         if (!string.IsNullOrEmpty(configuration.Input.RemoteView.Authorization))
         {
-            httpRequestMessage.Headers.Add("Authorization", configuration.Input.RemoteView.Authorization);
+            httpRequestMessage.Headers.Add(
+                "Authorization",
+                configuration.Input.RemoteView.Authorization
+            );
         }
 
-        using var httpClient = new HttpClient(new SocketsHttpHandler
-        {
-            AllowAutoRedirect = true,
-            MaxAutomaticRedirections = 5,
-        });
-        using var response = await httpClient.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+        using var httpClient = new HttpClient(
+            new SocketsHttpHandler { AllowAutoRedirect = true, MaxAutomaticRedirections = 5 }
+        );
+        using var response = await httpClient
+            .SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead)
+            .ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
         {
             logger.LogError("Invalid view download: HTTP {Status}", response.StatusCode);
             response.EnsureSuccessStatusCode(); // make it fail
         }
-        using var zip = new ZipArchive(await response.Content.ReadAsStreamAsync().ConfigureAwait(false));
-        zip.ExtractToDirectory(string.IsNullOrEmpty(configuration.Input.RemoteView.OverrideView)
-            ? configuration.Input.View
-            : configuration.Input.RemoteView.OverrideView);
+        using var zip = new ZipArchive(
+            await response.Content.ReadAsStreamAsync().ConfigureAwait(false)
+        );
+        zip.ExtractToDirectory(
+            string.IsNullOrEmpty(configuration.Input.RemoteView.OverrideView)
+                ? configuration.Input.View
+                : configuration.Input.RemoteView.OverrideView
+        );
     }
 }

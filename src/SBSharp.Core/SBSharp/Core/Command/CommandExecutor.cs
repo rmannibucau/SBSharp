@@ -21,7 +21,7 @@ public class CommandExecutor(
                 "serve" => serve.Value.InvokeAsync(),
                 "watch" => watch.Value.InvokeAsync(),
                 // todo: serve+watch
-                _ => UnknownCommand(command)
+                _ => UnknownCommand(command),
             }
         ).ConfigureAwait(false);
     }

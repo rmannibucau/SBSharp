@@ -11,9 +11,7 @@ public record IndexDocument(
     IDictionary<string, string> Attributes
 ) { }
 
-[JsonSourceGenerationOptions(
-    GenerationMode = JsonSourceGenerationMode.Default
-)]
+[JsonSourceGenerationOptions(GenerationMode = JsonSourceGenerationMode.Default)]
 [JsonSerializable(typeof(JsonIndex))]
 [JsonSerializable(typeof(IndexDocument))]
 public partial class SBSharpJsonContext : JsonSerializerContext { }
