@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using SBSharp.Core.Command;
 using SBSharp.Core.Configuration;
@@ -49,11 +50,11 @@ public static class IoCExtensions
 
         beans.AddSingleton(configuration);
 
-        // services
-        beans.AddTransient<SourceScanner>();
-        beans.AddTransient<ViewRenderer>();
-        beans.AddTransient<FileWatcher>();
-        beans.AddTransient<CommandExecutor>();
+        // services - overridable
+        beans.TryAddTransient<SourceScanner>();
+        beans.TryAddTransient<ViewRenderer>();
+        beans.TryAddTransient<FileWatcher>();
+        beans.TryAddTransient<CommandExecutor>();
 
         // commands
         beans.AddTransient<BuildCommand>();

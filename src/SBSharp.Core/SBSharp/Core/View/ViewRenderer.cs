@@ -25,8 +25,11 @@ public class ViewRenderer
 
         var builder = new RazorLightEngineBuilder()
             .SetOperatingAssembly(typeof(ViewRenderer).Assembly)
-            .UseFileSystemProject(root)
             .UseOptions(new RazorLightOptions { EnableDebugMode = false, PreRenderCallbacks = [] });
+        if (Directory.Exists(root))
+        {
+            builder.UseFileSystemProject(root);
+        }
         if (!string.IsNullOrEmpty(configuration.Build.RazorLocalCache))
         {
             builder.UseCachingProvider(
