@@ -1,6 +1,6 @@
-namespace SBSharp.Core.Scanner;
-
 using SBSharp.Tests.Temp;
+
+namespace SBSharp.Core.Scanner;
 
 public class SourceScannerTests
 {
@@ -29,6 +29,7 @@ public class SourceScannerTests
             .ToList();
         Assert.Equal(
             ["file1.adoc: File 1", "sub\\file2.adoc: File 2"],
+            // ReSharper disable once AccessToDisposedClosure
             files.Select(it => $"{it}: {File.ReadAllText(Path.Combine(tmp.Value, it))}").Order()
         );
     }

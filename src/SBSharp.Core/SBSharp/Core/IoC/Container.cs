@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using SBSharp.Core.Command;
 using SBSharp.Core.Configuration;
+using SBSharp.Core.SBSharp.Core.Rendering;
 using SBSharp.Core.Scanner;
 using SBSharp.Core.View;
 using SBSharp.Core.Watcher;
@@ -55,6 +56,8 @@ public static class IoCExtensions
         beans.TryAddTransient<ViewRenderer>();
         beans.TryAddTransient<FileWatcher>();
         beans.TryAddTransient<CommandExecutor>();
+        beans.TryAddTransient<IRendererFactory, DefaultRendererFactory>();
+        beans.TryAddTransient<IDataResolverProvider, DefaultDataResolverProvider>();
 
         // commands
         beans.AddTransient<BuildCommand>();

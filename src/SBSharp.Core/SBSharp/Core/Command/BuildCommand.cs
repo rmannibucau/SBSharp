@@ -14,6 +14,7 @@ using NAsciidoc.Renderer;
 using SBSharp.Core.Asciidoc;
 using SBSharp.Core.Configuration;
 using SBSharp.Core.Json;
+using SBSharp.Core.SBSharp.Core.Rendering;
 using SBSharp.Core.Scanner;
 using SBSharp.Core.View;
 
@@ -28,11 +29,14 @@ public class BuildCommand
     private readonly Parser parser;
     private readonly ParserContext ctx;
     private readonly AsciidoctorLikeHtmlRenderer.Configuration renderingConfiguration;
+    private readonly IRendererFactory rendererFactoryFactory;
 
     public BuildCommand(
         SBSharpConfiguration configuration,
         SourceScanner scanner,
         ViewRenderer views,
+        IRendererFactory rendererFactoryFactory,
+        IDataResolverProvider dataResolverProvider,
         ILogger<BuildCommand> logger
     )
     {
@@ -40,8 +44,9 @@ public class BuildCommand
         this.scanner = scanner;
         this.views = views;
         this.logger = logger;
+        this.rendererFactoryFactory = rendererFactoryFactory;
 
-        var attributes = new Dictionary<string, string>() { { "noheader", "true" } };
+        var attributes = new Dictionary<string, string> { { "noheader", "true" } };
         foreach (var it in configuration.Output.Attributes)
         {
             attributes.Add(it.Key, it.Value);
@@ -56,6 +61,7 @@ public class BuildCommand
             SkipGlobalContentWrapper = true,
             SupportDataAttributes = true,
             AssetsBase = configuration.Input.Location,
+            Resolver = dataResolverProvider.Create(),
         };
     }
 
@@ -366,6 +372,7 @@ public class BuildCommand
                 SkipGlobalContentWrapper = renderingConfiguration.SkipGlobalContentWrapper,
                 SupportDataAttributes = renderingConfiguration.SupportDataAttributes,
                 AssetsBase = renderingConfiguration.AssetsBase,
+                Resolver = renderingConfiguration.Resolver,
             };
         }
         else
@@ -373,9 +380,7 @@ public class BuildCommand
             options = renderingConfiguration;
         }
 
-        var renderer = configuration.Output.UseBootstrap
-            ? new BootstrapRender(options)
-            : new AsciidoctorLikeHtmlRenderer(options);
+        var renderer = rendererFactoryFactory.Create(options);
         renderer.Visit(document);
         return renderer.Result();
     }
