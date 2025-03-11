@@ -7,6 +7,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks.Dataflow;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NAsciidoc.Model;
 using NAsciidoc.Parser;
@@ -15,6 +16,7 @@ using SBSharp.Core.Asciidoc;
 using SBSharp.Core.Configuration;
 using SBSharp.Core.Json;
 using SBSharp.Core.SBSharp.Core.Rendering;
+using SBSharp.Core.SBSharp.Core.Spi;
 using SBSharp.Core.Scanner;
 using SBSharp.Core.View;
 
@@ -30,6 +32,7 @@ public class BuildCommand
     private readonly ParserContext ctx;
     private readonly AsciidoctorLikeHtmlRenderer.Configuration renderingConfiguration;
     private readonly IRendererFactory rendererFactoryFactory;
+    private readonly IServiceProvider provider;
 
     public BuildCommand(
         SBSharpConfiguration configuration,
@@ -37,7 +40,8 @@ public class BuildCommand
         ViewRenderer views,
         IRendererFactory rendererFactoryFactory,
         IDataResolverProvider dataResolverProvider,
-        ILogger<BuildCommand> logger
+        ILogger<BuildCommand> logger,
+        IServiceProvider provider
     )
     {
         this.configuration = configuration;
@@ -45,6 +49,7 @@ public class BuildCommand
         this.views = views;
         this.logger = logger;
         this.rendererFactoryFactory = rendererFactoryFactory;
+        this.provider = provider;
 
         var attributes = new Dictionary<string, string> { { "noheader", "true" } };
         foreach (var it in configuration.Output.Attributes)
@@ -421,6 +426,7 @@ public class BuildCommand
 
     private async Task<int> RenderAsync()
     {
+        var cancellationToken = CancellationToken.None;
         var blockOptions = new ExecutionDataflowBlockOptions
         // todo: make it configurable?
         {
@@ -429,14 +435,15 @@ public class BuildCommand
             EnsureOrdered = false,
             TaskScheduler = TaskScheduler.Default,
             BoundedCapacity = 1_024,
-            CancellationToken = new CancellationToken(),
+            CancellationToken = cancellationToken,
         };
 
         var pages = new List<(string, Page)>(16);
-        await LoadPages(pages, blockOptions);
+        await LoadPages(pages, blockOptions).ConfigureAwait(false);
 
         blockOptions.CancellationToken.ThrowIfCancellationRequested();
 
+        var userTasks = RunUserTasks(pages, cancellationToken);
         var tasks = await Task.WhenAll(
                 RenderRss(pages, blockOptions.CancellationToken),
                 RenderIndexJson(pages, blockOptions.CancellationToken),
@@ -447,9 +454,33 @@ public class BuildCommand
 
         // double await since we use actionblock for a few tasks
         await Task.WhenAll(tasks).ConfigureAwait(false);
+        await userTasks.ConfigureAwait(false);
         blockOptions.CancellationToken.ThrowIfCancellationRequested();
 
         return pages.Count;
+    }
+
+    private async Task RunUserTasks(List<(string, Page)> pages, CancellationToken cancellationToken)
+    {
+        var processors = new List<IUserPagesProcessor>();
+        // registered as IEnumerable<IUserPagesProcessor>
+        processors.AddRange(provider.GetServices<IUserPagesProcessor>());
+        if (processors.Count == 0) // was it registered as a simple processor
+        {
+            var service = provider.GetService<IUserPagesProcessor>();
+            if (service is not null)
+            {
+                processors.Add(service);
+            }
+        }
+        if (processors.Count == 0) // there is really nothing, more forward
+        {
+            return;
+        }
+
+        var content = pages.ToDictionary(it => it.Item1, it => it.Item2);
+        await Task.WhenAll(processors.Select(it => it.Process(content, cancellationToken)))
+            .ConfigureAwait(false);
     }
 
     private async Task LoadPages(
@@ -495,6 +526,7 @@ public class BuildCommand
                         }
                     }
                 }
+
                 lock (pages)
                 {
                     pages.Add((file, page!));
@@ -507,6 +539,7 @@ public class BuildCommand
         {
             await loadModelBlock.SendAsync(file).ConfigureAwait(false);
         }
+
         loadModelBlock.Complete();
         await loadModelBlock.Completion;
     }
@@ -527,6 +560,7 @@ public class BuildCommand
             page.Item2.Context.Pages = allPages;
             await renderBlock.SendAsync(page).ConfigureAwait(false);
         }
+
         renderBlock.Complete();
         return renderBlock.Completion;
     }
@@ -541,7 +575,6 @@ public class BuildCommand
             return await Task.FromResult(Task.CompletedTask);
         }
 
-        var allPages = pages.Select(it => it.Item2).ToList();
         var block = new ActionBlock<SBSharpConfiguration.PageDefinition>(
             async spec =>
             {
@@ -638,6 +671,7 @@ public class BuildCommand
         {
             await block.SendAsync(page).ConfigureAwait(false);
         }
+
         block.Complete();
         return block.Completion;
     }
@@ -720,6 +754,7 @@ public class BuildCommand
                 await File.WriteAllTextAsync(output, html).ConfigureAwait(false);
                 page++;
             }
+
             await Task.CompletedTask; // ensure there is at least one awaiter
         }
     }
@@ -737,6 +772,7 @@ public class BuildCommand
             {
                 slugValue = slugValue[..^5];
             }
+
             return new Page(
                 configuration.Output.Attributes,
                 adoc,
@@ -787,6 +823,7 @@ public class BuildCommand
             {
                 return File.ReadAllLines(reference);
             }
+
             return File.ReadAllLines(Path.Combine(configuration.Location, reference));
         }
     }

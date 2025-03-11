@@ -1,11 +1,68 @@
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.DependencyInjection;
 using SBSharp.Core.IoC;
+using SBSharp.Core.SBSharp.Core.Spi;
 using SBSharp.Tests.Temp;
 
 namespace SBSharp.Core.Command;
 
 public class BuildCommandTests
 {
+    [Fact]
+    public async Task CustomProcessors()
+    {
+        using var tmp = new TempFolder("BuildCommandTests_CustomProcessors");
+        var input = Path.Combine(tmp.Value, "src");
+        var output = Path.Combine(tmp.Value, "_site");
+        CreateBlog(input);
+
+        using var container = new Container(
+            [
+                "build",
+                $"--sbsharp:Input:Location={input}",
+                // global post index - we use author by convention but this is not needed
+                "--sbsharp:Input:VirtualPages:0:Slug=blog/{Page}",
+                "--sbsharp:Input:VirtualPages:0:Title=Posts page {Page}",
+                "--sbsharp:Input:VirtualPages:0:View=post-list",
+                "--sbsharp:Input:VirtualPages:0:Paginated=true",
+                "--sbsharp:Input:VirtualPages:0:PerValue=false",
+                "--sbsharp:Input:VirtualPages:0:CriteriaAttribute=author",
+                "--sbsharp:Input:VirtualPages:0:OrderByAttribute=author",
+                "--sbsharp:Input:VirtualPages:0:ReverseOrderBy=false",
+                // per author index
+                "--sbsharp:Input:VirtualPages:1:Slug=blog/author/{Value}/{Page}",
+                "--sbsharp:Input:VirtualPages:1:Title=Posts of {Value}, page {Page}",
+                "--sbsharp:Input:VirtualPages:1:View=post-list",
+                "--sbsharp:Input:VirtualPages:1:Paginated=true",
+                "--sbsharp:Input:VirtualPages:1:PerValue=true",
+                "--sbsharp:Input:VirtualPages:1:CriteriaAttribute=author",
+                "--sbsharp:Input:VirtualPages:1:OrderByAttribute=author",
+                "--sbsharp:Input:VirtualPages:1:ReverseOrderBy=false",
+                // output
+                $"--sbsharp:Output:Location={output}",
+                "--sbsharp:Output:Attributes:Key1=Value1",
+                "--sbsharp:Output:Attributes:Key2=Value2", // as a reminder of the syntax
+            ],
+            s => s.AddSingleton<IUserPagesProcessor, MyProcessor>()
+        );
+        await container.RunAsync();
+
+        Assert.NotNull(MyProcessor.AllPages);
+
+        var content = string.Join(
+            "\n----\n",
+            MyProcessor
+                .AllPages.OrderByDescending(p => p.Key)
+                .Select(it => $"{it.Key}->{it.Value.Slug}->{it.Value.Body()}")
+        );
+        Assert.Equal(
+            "index.adoc->index-> <div class=\"paragraph\">\n <p>\nBla bla\n </p>\n </div>\n\n"
+                + "----\n"
+                + "blog/post-1/simple-test.adoc->blog/post-1/simple-test-> <div class=\"paragraph\">\n <p>\nA post with default template.\n </p>\n </div>\n",
+            content
+        );
+    }
+
     [Fact]
     public async Task Build()
     {
@@ -44,7 +101,7 @@ public class BuildCommandTests
         );
         await container.RunAsync();
 
-        Assert.Equal(".test {}", File.ReadAllText(Path.Combine(output, "css/test.css")));
+        Assert.Equal(".test {}", await File.ReadAllTextAsync(Path.Combine(output, "css/test.css")));
         AssertRss(output);
         AssertIndexJson(output);
         AssertFiles(output);
@@ -330,5 +387,16 @@ public class BuildCommandTests
             A post with default template.
             """
         );
+    }
+
+    public class MyProcessor : IUserPagesProcessor
+    {
+        public static IDictionary<string, Page>? AllPages = null;
+
+        public Task Process(IDictionary<string, Page> pages, CancellationToken cancellationToken)
+        {
+            AllPages = pages;
+            return Task.CompletedTask;
+        }
     }
 }
